@@ -27,21 +27,40 @@ type NativeButtonProps = BaseProps &
 export type ButtonProps = AnchorProps | NativeButtonProps
 
 export function Button(props: ButtonProps) {
-  const { variant = 'primary', className = '', children, ...rest } = props
+  const { variant = 'primary', className = '', children } = props
   const classes = `${variantClass[variant]} ${className}`.trim()
 
   if ('href' in props && props.href) {
-    const { href, ...a } = rest as AnchorProps
+    // Quitar props de diseño; el resto va al <a> (target, rel, onClick, etc.)
+    const {
+      href,
+      variant: _omitV,
+      className: _omitC,
+      children: _omitCh,
+      ...anchorRest
+    } = props as AnchorProps
+    void _omitV
+    void _omitC
+    void _omitCh
     return (
-      <a href={href} className={classes} {...a}>
+      <a href={href} className={classes} {...anchorRest}>
         {children}
       </a>
     )
   }
 
-  const btn = rest as NativeButtonProps
+  const {
+    variant: _omitV2,
+    className: _omitC2,
+    children: _omitCh2,
+    type,
+    ...btnRest
+  } = props as NativeButtonProps
+  void _omitV2
+  void _omitC2
+  void _omitCh2
   return (
-    <button type={btn.type ?? 'button'} className={classes} {...btn}>
+    <button type={type ?? 'button'} className={classes} {...btnRest}>
       {children}
     </button>
   )
