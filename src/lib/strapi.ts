@@ -1,4 +1,5 @@
 import { defaultLandingPage } from '@/data/defaultLanding'
+import { getEnv } from '@/lib/runtimeEnv'
 import type { LandingPageData } from '@/types/landing'
 
 function isLandingPageData(value: unknown): value is LandingPageData {
@@ -35,8 +36,8 @@ export function unwrapLandingPayload(payload: unknown): LandingPageData | null {
 }
 
 export function getStrapiUrl(): string | undefined {
-  const url = import.meta.env.VITE_STRAPI_URL as string | undefined
-  return url?.replace(/\/$/, '')
+  const url = getEnv('VITE_STRAPI_URL')
+  return url ? url.replace(/\/$/, '') : undefined
 }
 
 /**
@@ -49,7 +50,7 @@ export async function fetchLandingFromStrapi(
   const base = getStrapiUrl()
   if (!base) return defaultLandingPage
 
-  const token = import.meta.env.VITE_STRAPI_API_TOKEN as string | undefined
+  const token = getEnv('VITE_STRAPI_API_TOKEN') || undefined
   const headers: HeadersInit = {
     Accept: 'application/json',
     ...(token ? { Authorization: `Bearer ${token}` } : {}),

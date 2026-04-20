@@ -1,5 +1,6 @@
 import axios from 'axios'
 import { landingApi } from '@/api/landingApi'
+import { getPublicApiBaseUrl } from '@/lib/runtimeEnv'
 
 export interface ContactDemoPayload {
   name: string
@@ -18,7 +19,7 @@ export interface ContactDemoApiEnvelope {
 export async function postContactDemo(
   payload: ContactDemoPayload,
 ): Promise<ContactDemoApiEnvelope> {
-  const base = import.meta.env.VITE_API_URL
+  const base = getPublicApiBaseUrl()
   if (!base || String(base).trim() === '') {
     throw new Error(
       'Falta configurar VITE_API_URL (URL base de la API, incluyendo /api).',
