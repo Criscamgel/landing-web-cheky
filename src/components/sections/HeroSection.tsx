@@ -6,7 +6,7 @@ type Props = { content: HeroContent }
 
 export function HeroSection({ content }: Props) {
   return (
-    <section className="relative pt-28 pb-16 md:pt-36 md:pb-20 px-5 bg-white">
+    <section className="relative pt-28 pb-16 md:pt-44 md:pb-20 px-5 bg-white">
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[900px] h-[500px] bg-primary-50 rounded-full blur-[100px] pointer-events-none" />
 
       <div className="max-w-4xl mx-auto text-center relative z-10">
