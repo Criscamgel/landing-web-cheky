@@ -1,13 +1,19 @@
-import type { FormEvent } from 'react'
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
+import { ErrorMessage, Field, Form, Formik } from 'formik'
 import { IconArrowRight, IconFile, IconPhone, IconShieldSmall } from '@/components/icons/UiIcons'
 import { Button } from '@/components/ui/Button'
+import { useContactDemoMutation } from '@/hooks/useContactDemoMutation'
+import { buildContactDemoSchema } from '@/lib/contactDemo.schema'
+import { hasContactDemoBeenSentInSession } from '@/lib/contactDemoSession'
+import { toast } from 'sonner'
+import type { ContactDemoPayload } from '@/actions/postContactDemo.action'
 import type { ContactHighlightIcon, ContactSectionContent } from '@/types/landing'
 
 type Props = { content: ContactSectionContent }
 
 function HighlightIcon({ name }: { name: ContactHighlightIcon }) {
-  const wrap = 'w-8 h-8 rounded-lg bg-secondary-50 border border-secondary-100 flex items-center justify-center flex-shrink-0 mt-0.5'
+  const wrap =
+    'w-8 h-8 rounded-lg bg-secondary-50 border border-secondary-100 flex items-center justify-center flex-shrink-0 mt-0.5'
   if (name === 'phone')
     return (
       <div className={wrap}>
@@ -28,13 +34,21 @@ function HighlightIcon({ name }: { name: ContactHighlightIcon }) {
 }
 
 export function ContactSection({ content }: Props) {
-  const [values, setValues] = useState<Record<string, string>>({})
+  const { mutate, isPending } = useContactDemoMutation()
+  const [locked, setLocked] = useState(() => hasContactDemoBeenSentInSession())
 
-  function handleSubmit(e: FormEvent) {
-    e.preventDefault()
-    // Conectar con Strapi (custom API) o servicio de leads
-    console.info('lead', values)
-  }
+  const initialValues = useMemo(() => {
+    const o: Record<string, string> = {}
+    for (const f of content.fields) {
+      o[f.id] = ''
+    }
+    return o
+  }, [content.fields])
+
+  const validationSchema = useMemo(
+    () => buildContactDemoSchema(content.fields),
+    [content.fields],
+  )
 
   return (
     <section id="contacto" className="py-16 px-5 bg-white">
@@ -63,53 +77,94 @@ export function ContactSection({ content }: Props) {
               </div>
             </div>
 
-            <form className="space-y-4" onSubmit={handleSubmit}>
-              {content.fields.map((field) => (
-                <div key={field.id}>
-                  <label
-                    htmlFor={field.id}
-                    className="block text-[11px] font-medium text-[#666] mb-1.5"
+            <Formik
+              initialValues={initialValues}
+              validationSchema={validationSchema}
+              validateOnBlur
+              onSubmit={(values, { setSubmitting }) => {
+                if (locked) {
+                  toast.info(
+                    'Ya enviaste una solicitud en esta sesión. Si necesitas otro contacto, abre una ventana privada o escríbenos a hola@cheky.co',
+                  )
+                  setSubmitting(false)
+                  return
+                }
+
+                const payload: ContactDemoPayload = {
+                  name: values.name,
+                  email: values.email,
+                  company: values.company,
+                  volume: values.volume,
+                }
+
+                mutate(payload, {
+                  onSuccess: () => {
+                    setLocked(true)
+                  },
+                  onSettled: () => setSubmitting(false),
+                })
+              }}
+            >
+              {({ isSubmitting }) => (
+                <Form className="space-y-4">
+                  {locked ? (
+                    <p className="text-sm text-primary-700 bg-primary-50 border border-primary-100 rounded-lg px-3 py-2.5">
+                      Ya enviaste tu solicitud desde este navegador. El equipo te contactará pronto.
+                    </p>
+                  ) : null}
+
+                  {content.fields.map((field) => (
+                    <div key={field.id}>
+                      <label
+                        htmlFor={field.id}
+                        className="block text-[11px] font-medium text-[#666] mb-1.5"
+                      >
+                        {field.label}
+                      </label>
+                      {field.type === 'select' ? (
+                        <Field
+                          as="select"
+                          id={field.id}
+                          name={field.id}
+                          disabled={locked}
+                          className="inp w-full rounded-lg px-3.5 py-2.5 text-sm cursor-pointer text-[#111] disabled:opacity-60"
+                        >
+                          {field.options?.map((opt) => (
+                            <option key={opt.value || opt.label} value={opt.value}>
+                              {opt.label}
+                            </option>
+                          ))}
+                        </Field>
+                      ) : (
+                        <Field
+                          id={field.id}
+                          name={field.id}
+                          type={field.type}
+                          placeholder={field.placeholder}
+                          disabled={locked}
+                          className="inp w-full rounded-lg px-3.5 py-2.5 text-sm text-[#111] disabled:opacity-60"
+                        />
+                      )}
+                      <ErrorMessage
+                        name={field.id}
+                        component="p"
+                        className="text-xs text-red-600 mt-1"
+                      />
+                    </div>
+                  ))}
+
+                  <Button
+                    type="submit"
+                    variant="primary"
+                    disabled={locked || isSubmitting || isPending}
+                    className="w-full text-sm font-semibold py-2.5 rounded-lg flex items-center justify-center gap-2 mt-1 opacity-100 disabled:opacity-50 disabled:pointer-events-none"
                   >
-                    {field.label}
-                  </label>
-                  {field.type === 'select' ? (
-                    <select
-                      id={field.id}
-                      className="inp w-full rounded-lg px-3.5 py-2.5 text-sm cursor-pointer text-[#999]"
-                      value={values[field.id] ?? ''}
-                      onChange={(ev) =>
-                        setValues((v) => ({ ...v, [field.id]: ev.target.value }))
-                      }
-                    >
-                      {field.options?.map((opt) => (
-                        <option key={opt.value || opt.label} value={opt.value}>
-                          {opt.label}
-                        </option>
-                      ))}
-                    </select>
-                  ) : (
-                    <input
-                      id={field.id}
-                      type={field.type}
-                      placeholder={field.placeholder}
-                      className="inp w-full rounded-lg px-3.5 py-2.5 text-sm text-[#111]"
-                      value={values[field.id] ?? ''}
-                      onChange={(ev) =>
-                        setValues((v) => ({ ...v, [field.id]: ev.target.value }))
-                      }
-                    />
-                  )}
-                </div>
-              ))}
-              <Button
-                type="submit"
-                variant="primary"
-                className="w-full text-sm font-semibold py-2.5 rounded-lg flex items-center justify-center gap-2 mt-1"
-              >
-                {content.submitLabel}
-                <IconArrowRight />
-              </Button>
-            </form>
+                    {content.submitLabel}
+                    <IconArrowRight />
+                  </Button>
+                </Form>
+              )}
+            </Formik>
           </div>
         </div>
       </div>
