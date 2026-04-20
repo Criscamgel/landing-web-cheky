@@ -1,4 +1,3 @@
-import { IconArrowRight } from '@/components/icons/UiIcons'
 import { Button } from '@/components/ui/Button'
 import type { HeroContent } from '@/types/landing'
 
@@ -6,7 +5,7 @@ type Props = { content: HeroContent }
 
 export function HeroSection({ content }: Props) {
   return (
-    <section className="relative pt-28 pb-16 md:pt-44 md:pb-20 px-5 bg-white">
+    <section className="relative pt-28 pb-16 md:pt-[7.5rem] md:pb-20 px-5 bg-white">
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[900px] h-[500px] bg-primary-50 rounded-full blur-[100px] pointer-events-none" />
 
       <div className="max-w-4xl mx-auto text-center relative z-10">
@@ -29,17 +28,9 @@ export function HeroSection({ content }: Props) {
 
         <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
           <Button
-            href={content.primaryCta.href}
-            variant="primary"
-            className="text-sm font-semibold px-7 py-3 rounded-lg inline-flex items-center gap-2"
-          >
-            {content.primaryCta.label}
-            <IconArrowRight />
-          </Button>
-          <Button
             href={content.secondaryCta.href}
-            variant="inverted"
-            className="text-sm font-medium px-7 py-3 rounded-lg inline-flex items-center gap-2"
+            variant="primary"
+            className="text-sm font-semibold px-7 py-3 rounded-lg inline-flex items-center justify-center"
           >
             {content.secondaryCta.label}
           </Button>
