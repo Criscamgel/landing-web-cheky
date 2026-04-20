@@ -15,9 +15,7 @@ export const defaultLandingPage: LandingPageData = {
       { label: 'Contacto', href: '#contacto' },
     ],
     loginLabel: 'Iniciar sesión',
-    loginHref: '#contacto',
-    ctaLabel: 'Comenzar',
-    ctaHref: '#contacto',
+    loginHref: 'https://app.cheky.co',
   },
   hero: {
     badge: 'Score de confiabilidad en tiempo real',

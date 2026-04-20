@@ -30,18 +30,14 @@ export function Navbar({ content }: Props) {
         </div>
 
         <div className="hidden md:flex items-center gap-3">
-          <a
-            href={content.loginHref}
-            className="text-[12px] font-medium text-[#666] hover:text-[#111] transition-colors"
-          >
-            {content.loginLabel}
-          </a>
           <Button
-            href={content.ctaHref}
+            href={content.loginHref}
             variant="primary"
             className="text-[11px] font-semibold px-4 py-2 rounded-lg inline-block"
+            target="_blank"
+            rel="noopener noreferrer"
           >
-            {content.ctaLabel}
+            {content.loginLabel}
           </Button>
         </div>
 
@@ -74,12 +70,14 @@ export function Navbar({ content }: Props) {
             </a>
           ))}
           <Button
-            href={content.ctaHref}
+            href={content.loginHref}
             variant="primary"
-            className="text-xs font-semibold px-4 py-2.5 rounded-lg text-center mt-1 inline-block"
+            className="text-xs font-semibold px-4 py-2.5 rounded-lg text-center mt-1 inline-block w-full"
+            target="_blank"
+            rel="noopener noreferrer"
             onClick={() => setOpen(false)}
           >
-            {content.ctaLabel}
+            {content.loginLabel}
           </Button>
         </div>
       </div>
