@@ -96,7 +96,7 @@ export interface ContactField {
   options?: ContactSelectOption[]
 }
 
-export type ContactHighlightIcon = 'phone' | 'file' | 'shield'
+export type ContactHighlightIcon = 'phone' | 'file' | 'shield' | 'mail'
 
 export interface ContactHighlight {
   title: string

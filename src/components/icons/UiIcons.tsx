@@ -96,6 +96,26 @@ export function IconFile({ className }: SvgProps) {
   )
 }
 
+export function IconMail({ className }: SvgProps) {
+  return (
+    <svg
+      width={14}
+      height={14}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="#79573F"
+      strokeWidth={1.8}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      aria-hidden
+    >
+      <rect x="3" y="5" width="18" height="14" rx="2" />
+      <path d="m3 7 9 6 9-6" />
+    </svg>
+  )
+}
+
 export function IconShieldSmall({ className }: SvgProps) {
   return (
     <svg
