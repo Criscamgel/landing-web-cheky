@@ -5,7 +5,7 @@ export const defaultLandingPage: LandingPageData = {
   seo: {
     title: 'Cheky — Huella Digital & Confiabilidad',
     description:
-      'Verifica la huella digital de cualquier comprador. Score de confiabilidad en tiempo real.',
+      'Verifica el Patrón de comportamiento digital de cualquier comprador. Score de confiabilidad en tiempo real.',
   },
   navbar: {
     brandName: 'Cheky',
@@ -19,18 +19,17 @@ export const defaultLandingPage: LandingPageData = {
   },
   hero: {
     badge: 'Score de confiabilidad en tiempo real',
-    titleLine1: 'Verifica la huella digital',
+    titleLine1: 'Verifica el Patrón de comportamiento digital ',
     titleLine2: 'de cualquier comprador',
     subtitle:
-      'Genera una calificación de confiabilidad basada en datos reales. Identifica riesgos antes de cerrar una operación.',
+      'Genera una calificación de confiabilidad basada en datos reales. Identifica riesgos antes de cerrar una venta.',
     primaryCta: { label: 'Crear cuenta', href: '#contacto' },
     secondaryCta: { label: 'Ver cómo funciona', href: '#como-funciona' },
   },
   stats: [
-    { value: '42', label: 'Compañías activas' },
-    { value: '1,284', label: 'Checks realizados' },
-    { value: '94%', label: 'Precisión del score' },
-    { value: '<2s', label: 'Tiempo de respuesta' },
+    { value: '1270', label: 'Checks realizados' },
+    { value: '94%', label: 'Porcentaje de acertividad' },
+    { value: '<2s', label: 'Tiempo de respuesta por consulta' },
   ],
   howItWorks: {
     overline: 'Proceso',
@@ -40,19 +39,19 @@ export const defaultLandingPage: LandingPageData = {
         step: '1',
         title: 'Ingresa los datos',
         description:
-          'Nombre, email, teléfono o documento del comprador que quieres verificar.',
+          'Email o teléfono del comprador que quieres verificar.',
       },
       {
         step: '2',
-        title: 'Se analiza la huella',
+        title: 'Se analizan los datos del comprador',
         description:
           'Cheky cruza múltiples fuentes de datos para construir el perfil digital completo.',
       },
       {
         step: '3',
-        title: 'Recibe el score',
+        title: 'Recibe el score en tiempo real',
         description:
-          'Obtén una calificación de confiabilidad de 0 a 100 con el detalle de cada factor.',
+          'Obtén el patrón de comportamiento de tu cliente al instante',
       },
     ],
   },
@@ -161,8 +160,8 @@ export const defaultLandingPage: LandingPageData = {
       'Te mostramos cómo Cheky puede integrarse a tu flujo de venta y reducir el fraude desde el día uno.',
     highlights: [
       {
-        icon: 'phone',
-        title: 'Llamada personalizada',
+        icon: 'mail',
+        title: 'Respuesta por mail',
         subtitle: 'Te contactamos en menos de 24h',
       },
       {
@@ -173,7 +172,7 @@ export const defaultLandingPage: LandingPageData = {
       {
         icon: 'shield',
         title: 'Sin compromiso',
-        subtitle: 'Prueba gratuita, cancela cuando quieras',
+        subtitle: 'Demostración gratuita',
       },
     ],
     fields: [

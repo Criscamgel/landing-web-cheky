@@ -1,6 +1,12 @@
 import { useMemo, useState } from 'react'
 import { ErrorMessage, Field, Form, Formik } from 'formik'
-import { IconArrowRight, IconFile, IconPhone, IconShieldSmall } from '@/components/icons/UiIcons'
+import {
+  IconArrowRight,
+  IconFile,
+  IconMail,
+  IconPhone,
+  IconShieldSmall,
+} from '@/components/icons/UiIcons'
 import { Button } from '@/components/ui/Button'
 import { useContactDemoMutation } from '@/hooks/useContactDemoMutation'
 import { buildContactDemoSchema } from '@/lib/contactDemo.schema'
@@ -24,6 +30,12 @@ function HighlightIcon({ name }: { name: ContactHighlightIcon }) {
     return (
       <div className={wrap}>
         <IconFile />
+      </div>
+    )
+  if (name === 'mail')
+    return (
+      <div className={wrap}>
+        <IconMail />
       </div>
     )
   return (
