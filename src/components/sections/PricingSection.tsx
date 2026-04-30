@@ -1,24 +1,23 @@
-import { PricingCard } from '@/components/sections/PricingCard'
+import { PublicPlansPricingSlider } from '@/components/sections/PublicPlansPricingSlider'
 import { SectionHeading } from '@/components/ui/SectionHeading'
 import type { PricingSectionContent } from '@/types/landing'
 
-type Props = { content: PricingSectionContent }
+type Props = {
+  content: PricingSectionContent
+  loginHref: string
+}
 
-export function PricingSection({ content }: Props) {
+export function PricingSection({ content, loginHref }: Props) {
   return (
-    <section id="precios" className="py-16 px-5 bg-white">
-      <div className="max-w-4xl mx-auto">
+    <section id="precios" className="bg-white px-5 py-16">
+      <div className="mx-auto max-w-6xl">
         <SectionHeading
           overline={content.overline}
           title={content.title}
           subtitle={content.subtitle}
         />
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-          {content.plans.map((plan) => (
-            <PricingCard key={plan.id} plan={plan} />
-          ))}
-        </div>
+        <PublicPlansPricingSlider loginHref={loginHref} />
       </div>
     </section>
   )
