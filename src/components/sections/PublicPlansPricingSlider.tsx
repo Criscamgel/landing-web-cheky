@@ -4,7 +4,29 @@ import { IconCheck } from '@/components/icons/UiIcons'
 import { usePublicPlansCatalogQuery } from '@/hooks/usePublicPlansCatalogQuery'
 import type { PublicPlanDto } from '@/types/publicPlan'
 
-const VISIBLE = 3
+/** <768: 1 tarjeta, paso 1 · 768–1023: 2 tarjetas, paso 2 · ≥1024: 3 tarjetas, paso 1 */
+function readSliderMetrics(width: number): { visible: number; step: number } {
+  if (width < 768) return { visible: 1, step: 1 }
+  if (width < 1024) return { visible: 2, step: 2 }
+  return { visible: 3, step: 1 }
+}
+
+function usePricingSliderMetrics() {
+  const [metrics, setMetrics] = useState(() =>
+    typeof window !== 'undefined'
+      ? readSliderMetrics(window.innerWidth)
+      : { visible: 3, step: 1 },
+  )
+
+  useEffect(() => {
+    const onResize = () => setMetrics(readSliderMetrics(window.innerWidth))
+    window.addEventListener('resize', onResize)
+    onResize()
+    return () => window.removeEventListener('resize', onResize)
+  }, [])
+
+  return metrics
+}
 
 const TEASERS = [
   'Para comenzar a verificar compradores de forma esporádica.',
@@ -78,6 +100,7 @@ type Props = {
 export function PublicPlansPricingSlider({ loginHref }: Props) {
   const { data: rawPlans, isLoading, isError, refetch } = usePublicPlansCatalogQuery()
   const [start, setStart] = useState(0)
+  const { visible, step } = usePricingSliderMetrics()
 
   const slides: CatalogSlide[] = useMemo(() => {
     const sorted = [...(rawPlans ?? [])].sort(
@@ -91,22 +114,25 @@ export function PublicPlansPricingSlider({ loginHref }: Props) {
     }))
   }, [rawPlans])
 
-  const maxStart = Math.max(0, slides.length - VISIBLE)
+  const maxStart = Math.max(0, slides.length - visible)
 
   useEffect(() => {
     setStart((s) => Math.min(s, maxStart))
-  }, [maxStart])
+  }, [maxStart, visible])
 
   const safeStart = Math.min(start, maxStart)
-  const windowSlides = slides.slice(safeStart, safeStart + VISIBLE)
+  const windowSlides = slides.slice(safeStart, safeStart + visible)
   const popularGlobalIndex =
     slides.length > 0 ? Math.floor((slides.length - 1) / 2) : -1
 
-  const showArrows = slides.length > VISIBLE
+  const showArrows = slides.length > visible
+
+  const gridColsClass =
+    visible === 1 ? 'grid-cols-1' : visible === 2 ? 'grid-cols-2' : 'grid-cols-3'
 
   if (isLoading) {
     return (
-      <div className="grid min-h-64 grid-cols-1 gap-4 sm:grid-cols-3">
+      <div className="grid min-h-64 grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
         {[0, 1, 2].map((k) => (
           <div
             key={k}
@@ -156,8 +182,8 @@ export function PublicPlansPricingSlider({ loginHref }: Props) {
             type="button"
             aria-label="Planes anteriores"
             disabled={safeStart <= 0}
-            onClick={() => setStart((s) => Math.max(0, s - 1))}
-            className="absolute left-0 top-1/2 z-10 hidden size-10 -translate-y-1/2 items-center justify-center rounded-full border border-[#e0e0e0] bg-white text-[#333] shadow-md transition-colors hover:bg-[#f7f7f7] disabled:pointer-events-none disabled:opacity-40 md:flex"
+            onClick={() => setStart((s) => Math.max(0, s - step))}
+            className="absolute left-0 top-1/2 z-10 hidden size-10 -translate-y-1/2 items-center justify-center rounded-full border border-[#e0e0e0] bg-white text-[#333] shadow-md transition-colors hover:bg-[#f7f7f7] disabled:pointer-events-none disabled:opacity-40 lg:flex"
           >
             <ChevronLeftIcon />
           </button>
@@ -165,8 +191,8 @@ export function PublicPlansPricingSlider({ loginHref }: Props) {
             type="button"
             aria-label="Planes siguientes"
             disabled={safeStart >= maxStart}
-            onClick={() => setStart((s) => Math.min(maxStart, s + 1))}
-            className="absolute right-0 top-1/2 z-10 hidden size-10 -translate-y-1/2 items-center justify-center rounded-full border border-[#e0e0e0] bg-white text-[#333] shadow-md transition-colors hover:bg-[#f7f7f7] disabled:pointer-events-none disabled:opacity-40 md:flex"
+            onClick={() => setStart((s) => Math.min(maxStart, s + step))}
+            className="absolute right-0 top-1/2 z-10 hidden size-10 -translate-y-1/2 items-center justify-center rounded-full border border-[#e0e0e0] bg-white text-[#333] shadow-md transition-colors hover:bg-[#f7f7f7] disabled:pointer-events-none disabled:opacity-40 lg:flex"
           >
             <ChevronRightIcon />
           </button>
@@ -174,13 +200,13 @@ export function PublicPlansPricingSlider({ loginHref }: Props) {
       ) : null}
 
       <div
-        className={showArrows ? 'px-1 md:px-12' : undefined}
+        className={showArrows ? 'px-1 lg:px-12' : undefined}
         role="region"
         aria-roledescription="carrusel"
         aria-label="Planes disponibles"
       >
-        <div className="overflow-x-auto pb-2 [-ms-overflow-style:none] [scrollbar-width:none] md:overflow-visible [&::-webkit-scrollbar]:hidden">
-          <div className="mx-auto grid min-w-[min(100%,52rem)] grid-cols-3 gap-4 md:min-w-0">
+        <div className="w-full pb-2">
+          <div className={`mx-auto grid w-full gap-4 ${gridColsClass}`}>
             {windowSlides.map((plan) => {
               const isPopular = plan.globalIndex === popularGlobalIndex
               const isEnterprise =
@@ -234,7 +260,7 @@ export function PublicPlansPricingSlider({ loginHref }: Props) {
                   <Button
                     href={loginHref}
                     variant={ctaVariant}
-                    className="mt-auto w-full rounded-lg py-2.5 text-xs font-semibold"
+                    className="mt-auto flex h-12 w-full items-center justify-center rounded-xl px-4 text-center text-sm font-semibold leading-none md:h-14 md:text-base"
                   >
                     Adquirir
                   </Button>
@@ -246,12 +272,12 @@ export function PublicPlansPricingSlider({ loginHref }: Props) {
       </div>
 
       {showArrows ? (
-        <div className="mt-4 flex justify-center gap-3 md:hidden">
+        <div className="mt-4 flex justify-center gap-3 lg:hidden">
           <button
             type="button"
             aria-label="Planes anteriores"
             disabled={safeStart <= 0}
-            onClick={() => setStart((s) => Math.max(0, s - 1))}
+            onClick={() => setStart((s) => Math.max(0, s - step))}
             className="flex size-10 items-center justify-center rounded-full border border-[#e0e0e0] bg-white text-[#333] shadow disabled:opacity-40"
           >
             <ChevronLeftIcon />
@@ -260,7 +286,7 @@ export function PublicPlansPricingSlider({ loginHref }: Props) {
             type="button"
             aria-label="Planes siguientes"
             disabled={safeStart >= maxStart}
-            onClick={() => setStart((s) => Math.min(maxStart, s + 1))}
+            onClick={() => setStart((s) => Math.min(maxStart, s + step))}
             className="flex size-10 items-center justify-center rounded-full border border-[#e0e0e0] bg-white text-[#333] shadow disabled:opacity-40"
           >
             <ChevronRightIcon />
