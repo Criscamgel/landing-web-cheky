@@ -4,10 +4,9 @@ import type { PricingSectionContent } from '@/types/landing'
 
 type Props = {
   content: PricingSectionContent
-  loginHref: string
 }
 
-export function PricingSection({ content, loginHref }: Props) {
+export function PricingSection({ content }: Props) {
   return (
     <section id="precios" className="bg-white px-5 py-16">
       <div className="mx-auto max-w-6xl">
@@ -17,7 +16,7 @@ export function PricingSection({ content, loginHref }: Props) {
           subtitle={content.subtitle}
         />
 
-        <PublicPlansPricingSlider loginHref={loginHref} />
+        <PublicPlansPricingSlider />
       </div>
     </section>
   )
