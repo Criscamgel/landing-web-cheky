@@ -1,8 +1,11 @@
 import { useEffect, useMemo, useState } from 'react'
+import { toast } from 'sonner'
 import { Button } from '@/components/ui/Button'
 import { IconCheck } from '@/components/icons/UiIcons'
 import { usePublicPlansCatalogQuery } from '@/hooks/usePublicPlansCatalogQuery'
 import type { PublicPlanDto } from '@/types/publicPlan'
+import { postBoldCheckout } from '@/actions/postBoldCheckout.action'
+import { BOLD_PAYMENT_LINK_SESSION_KEY } from '@/lib/boldCheckoutSession'
 
 /** <768: 1 tarjeta, paso 1 · 768–1023: 2 tarjetas, paso 2 · ≥1024: 3 tarjetas, paso 1 */
 function readSliderMetrics(width: number): { visible: number; step: number } {
@@ -93,13 +96,10 @@ function ChevronRightIcon() {
   )
 }
 
-type Props = {
-  loginHref: string
-}
-
-export function PublicPlansPricingSlider({ loginHref }: Props) {
+export function PublicPlansPricingSlider() {
   const { data: rawPlans, isLoading, isError, refetch } = usePublicPlansCatalogQuery()
   const [start, setStart] = useState(0)
+  const [checkoutPlanId, setCheckoutPlanId] = useState<string | null>(null)
   const { visible, step } = usePricingSliderMetrics()
 
   const slides: CatalogSlide[] = useMemo(() => {
@@ -258,11 +258,32 @@ export function PublicPlansPricingSlider({ loginHref }: Props) {
                   </ul>
 
                   <Button
-                    href={loginHref}
+                    type="button"
                     variant={ctaVariant}
-                    className="mt-auto flex h-12 w-full items-center justify-center rounded-xl px-4 text-center text-sm font-semibold leading-none md:h-14 md:text-base"
+                    disabled={checkoutPlanId !== null}
+                    className="mt-auto flex h-12 w-full items-center justify-center rounded-xl px-4 text-center text-sm font-semibold leading-none disabled:opacity-60 md:h-14 md:text-base"
+                    onClick={() => {
+                      void (async () => {
+                        setCheckoutPlanId(plan.id)
+                        try {
+                          const res = await postBoldCheckout(plan.id)
+                          const url = res.data?.redirectUrl
+                          const link = res.data?.paymentLink
+                          if (!url || !link) {
+                            throw new Error('Respuesta incompleta del servidor')
+                          }
+                          sessionStorage.setItem(BOLD_PAYMENT_LINK_SESSION_KEY, link)
+                          window.location.assign(url)
+                        } catch (e) {
+                          setCheckoutPlanId(null)
+                          toast.error(
+                            e instanceof Error ? e.message : 'No se pudo iniciar el pago',
+                          )
+                        }
+                      })()
+                    }}
                   >
-                    Adquirir
+                    {checkoutPlanId === plan.id ? 'Redirigiendo…' : 'Adquirir'}
                   </Button>
                 </article>
               )
