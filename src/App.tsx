@@ -1,5 +1,6 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
+import { LandingPostPaymentSignupModal } from '@/components/landing/LandingPostPaymentSignupModal'
 import { LandingPage } from '@/components/landing/LandingPage'
 import { useLandingPage } from '@/hooks/useLandingPage'
 import { postBoldConfirm } from '@/actions/postBoldConfirm.action'
@@ -10,6 +11,7 @@ import {
 
 export default function App() {
   const { data, isLoading, error } = useLandingPage()
+  const [landingSignupOpen, setLandingSignupOpen] = useState(false)
 
   useEffect(() => {
     const sp = new URLSearchParams(window.location.search)
@@ -29,6 +31,9 @@ export default function App() {
         const res = await postBoldConfirm(paymentLink)
         window.history.replaceState({}, '', `${window.location.pathname}${window.location.hash}`)
         toast.success(res.message ?? 'Gracias por tu pago.')
+        if (res.data?.source === 'landing' && res.data?.fulfilled !== false) {
+          setLandingSignupOpen(true)
+        }
       } catch (e) {
         sessionStorage.setItem(BOLD_PAYMENT_LINK_SESSION_KEY, paymentLink)
         window.history.replaceState({}, '', `${window.location.pathname}${window.location.hash}`)
@@ -51,5 +56,10 @@ export default function App() {
     console.warn(error)
   }
 
-  return <LandingPage data={data} />
+  return (
+    <>
+      <LandingPostPaymentSignupModal open={landingSignupOpen} onOpenChange={setLandingSignupOpen} />
+      <LandingPage data={data} />
+    </>
+  )
 }

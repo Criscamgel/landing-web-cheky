@@ -32,3 +32,8 @@ export function getEnv(key: string): string {
 export function getPublicApiBaseUrl(): string {
   return getEnv('VITE_API_URL').replace(/\/$/, '')
 }
+
+/** URL base de la webapp (solo origen); post-pago redirige a `/auth/login?...`. */
+export function getWebAppBaseUrl(): string {
+  return getEnv('VITE_WEB_APP_URL').replace(/\/$/, '')
+}
