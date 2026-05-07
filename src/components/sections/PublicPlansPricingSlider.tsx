@@ -5,7 +5,15 @@ import { IconCheck } from '@/components/icons/UiIcons'
 import { usePublicPlansCatalogQuery } from '@/hooks/usePublicPlansCatalogQuery'
 import type { PublicPlanDto } from '@/types/publicPlan'
 import { postBoldCheckout } from '@/actions/postBoldCheckout.action'
-import { BOLD_PAYMENT_LINK_SESSION_KEY } from '@/lib/boldCheckoutSession'
+import {
+  BOLD_PAYMENT_LINK_SESSION_KEY,
+  clearLandingBoldCheckoutPending,
+  isLandingBoldCheckoutPending,
+  setLandingBoldCheckoutPending,
+} from '@/lib/boldCheckoutSession'
+import { LandingPlanLegalConfirmModal } from '@/components/landing/LandingPlanLegalConfirmModal'
+import { LandingBoldCheckoutBlockingOverlay } from '@/components/landing/LandingBoldCheckoutBlockingOverlay'
+import { getTermsPdfUrl } from '@/lib/termsPdfUrl'
 
 /** <768: 1 tarjeta, paso 1 · 768–1023: 2 tarjetas, paso 2 · ≥1024: 3 tarjetas, paso 1 */
 function readSliderMetrics(width: number): { visible: number; step: number } {
@@ -100,6 +108,10 @@ export function PublicPlansPricingSlider() {
   const { data: rawPlans, isLoading, isError, refetch } = usePublicPlansCatalogQuery()
   const [start, setStart] = useState(0)
   const [checkoutPlanId, setCheckoutPlanId] = useState<string | null>(null)
+  const [legalPlan, setLegalPlan] = useState<PublicPlanDto | null>(null)
+  const [legalModalOpen, setLegalModalOpen] = useState(false)
+  const [blockingBoldRedirect, setBlockingBoldRedirect] = useState(false)
+  const termsPdfUrl = useMemo(() => getTermsPdfUrl(), [])
   const { visible, step } = usePricingSliderMetrics()
 
   const slides: CatalogSlide[] = useMemo(() => {
@@ -119,6 +131,28 @@ export function PublicPlansPricingSlider() {
   useEffect(() => {
     setStart((s) => Math.min(s, maxStart))
   }, [maxStart, visible])
+
+  useEffect(() => {
+    const resetIfAbandoned = () => {
+      try {
+        const sp = new URLSearchParams(window.location.search)
+        if (sp.get('pagoBold') === '1') return
+        if (!isLandingBoldCheckoutPending()) return
+        clearLandingBoldCheckoutPending()
+        setCheckoutPlanId(null)
+        setBlockingBoldRedirect(false)
+      } catch {
+        /* ignore */
+      }
+    }
+    window.addEventListener('pageshow', resetIfAbandoned)
+    window.addEventListener('popstate', resetIfAbandoned)
+    resetIfAbandoned()
+    return () => {
+      window.removeEventListener('pageshow', resetIfAbandoned)
+      window.removeEventListener('popstate', resetIfAbandoned)
+    }
+  }, [])
 
   const safeStart = Math.min(start, maxStart)
   const windowSlides = slides.slice(safeStart, safeStart + visible)
@@ -176,6 +210,46 @@ export function PublicPlansPricingSlider() {
 
   return (
     <div className="relative min-w-0">
+      <LandingBoldCheckoutBlockingOverlay open={blockingBoldRedirect} />
+      <LandingPlanLegalConfirmModal
+        plan={legalPlan}
+        open={legalModalOpen}
+        termsPdfUrl={termsPdfUrl}
+        onOpenChange={(open) => {
+          setLegalModalOpen(open)
+          if (!open) setLegalPlan(null)
+        }}
+        onConfirmContinue={() => {
+          const plan = legalPlan
+          if (!plan) return
+          setLegalModalOpen(false)
+          setLegalPlan(null)
+          setBlockingBoldRedirect(true)
+          setCheckoutPlanId(plan.id)
+          void (async () => {
+            try {
+              if (import.meta.env.DEV) {
+                // eslint-disable-next-line no-console
+                console.debug('[landing] Bold checkout planId=', plan.id)
+              }
+              setLandingBoldCheckoutPending(plan.id)
+              const res = await postBoldCheckout(plan.id)
+              const url = res.data?.redirectUrl
+              const link = res.data?.paymentLink
+              if (!url || !link) {
+                throw new Error('Respuesta incompleta del servidor')
+              }
+              sessionStorage.setItem(BOLD_PAYMENT_LINK_SESSION_KEY, link)
+              window.location.assign(url)
+            } catch (e) {
+              clearLandingBoldCheckoutPending()
+              setCheckoutPlanId(null)
+              setBlockingBoldRedirect(false)
+              toast.error(e instanceof Error ? e.message : 'No se pudo iniciar el pago')
+            }
+          })()
+        }}
+      />
       {showArrows ? (
         <>
           <button
@@ -260,27 +334,11 @@ export function PublicPlansPricingSlider() {
                   <Button
                     type="button"
                     variant={ctaVariant}
-                    disabled={checkoutPlanId !== null}
+                    disabled={checkoutPlanId !== null || blockingBoldRedirect}
                     className="mt-auto flex h-12 w-full items-center justify-center rounded-xl px-4 text-center text-sm font-semibold leading-none disabled:opacity-60 md:h-14 md:text-base"
                     onClick={() => {
-                      void (async () => {
-                        setCheckoutPlanId(plan.id)
-                        try {
-                          const res = await postBoldCheckout(plan.id)
-                          const url = res.data?.redirectUrl
-                          const link = res.data?.paymentLink
-                          if (!url || !link) {
-                            throw new Error('Respuesta incompleta del servidor')
-                          }
-                          sessionStorage.setItem(BOLD_PAYMENT_LINK_SESSION_KEY, link)
-                          window.location.assign(url)
-                        } catch (e) {
-                          setCheckoutPlanId(null)
-                          toast.error(
-                            e instanceof Error ? e.message : 'No se pudo iniciar el pago',
-                          )
-                        }
-                      })()
+                      setLegalPlan(plan)
+                      setLegalModalOpen(true)
                     }}
                   >
                     {checkoutPlanId === plan.id ? 'Redirigiendo…' : 'Adquirir'}
