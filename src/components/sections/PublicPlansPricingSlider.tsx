@@ -13,7 +13,6 @@ import {
 } from '@/lib/boldCheckoutSession'
 import { LandingPlanLegalConfirmModal } from '@/components/landing/LandingPlanLegalConfirmModal'
 import { LandingBoldCheckoutBlockingOverlay } from '@/components/landing/LandingBoldCheckoutBlockingOverlay'
-import { getTermsPdfUrl } from '@/lib/termsPdfUrl'
 
 /** <768: 1 tarjeta, paso 1 · 768–1023: 2 tarjetas, paso 2 · ≥1024: 3 tarjetas, paso 1 */
 function readSliderMetrics(width: number): { visible: number; step: number } {
@@ -111,7 +110,6 @@ export function PublicPlansPricingSlider() {
   const [legalPlan, setLegalPlan] = useState<PublicPlanDto | null>(null)
   const [legalModalOpen, setLegalModalOpen] = useState(false)
   const [blockingBoldRedirect, setBlockingBoldRedirect] = useState(false)
-  const termsPdfUrl = useMemo(() => getTermsPdfUrl(), [])
   const { visible, step } = usePricingSliderMetrics()
 
   const slides: CatalogSlide[] = useMemo(() => {
@@ -214,7 +212,6 @@ export function PublicPlansPricingSlider() {
       <LandingPlanLegalConfirmModal
         plan={legalPlan}
         open={legalModalOpen}
-        termsPdfUrl={termsPdfUrl}
         onOpenChange={(open) => {
           setLegalModalOpen(open)
           if (!open) setLegalPlan(null)
