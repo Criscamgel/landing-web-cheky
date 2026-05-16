@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { AnimatePresence } from 'framer-motion'
 import { toast } from 'sonner'
+import { CarouselSlide } from '@/components/motion/CarouselSlide'
 import { Button } from '@/components/ui/Button'
 import { IconCheck } from '@/components/icons/UiIcons'
 import { usePublicPlansCatalogQuery } from '@/hooks/usePublicPlansCatalogQuery'
@@ -327,15 +329,17 @@ export function PublicPlansPricingSlider() {
         aria-label="Planes disponibles"
       >
         <div className="w-full pb-2">
-          <div className={`mx-auto grid w-full gap-4 ${gridColsClass}`}>
-            {windowSlice.map((item) => {
+          <AnimatePresence mode="popLayout">
+            <div className={`mx-auto grid w-full gap-4 ${gridColsClass}`}>
+            {windowSlice.map((item, slideIndex) => {
               if (item.kind === 'custom-search') {
                 return (
-                  <CustomPlanSearchCard
-                    key="custom-plan-search"
-                    onSearch={handleCustomPlanSearch}
-                    disabled={checkoutPlanId !== null}
-                  />
+                  <CarouselSlide key="custom-plan-search" index={slideIndex}>
+                    <CustomPlanSearchCard
+                      onSearch={handleCustomPlanSearch}
+                      disabled={checkoutPlanId !== null}
+                    />
+                  </CarouselSlide>
                 )
               }
 
@@ -361,10 +365,11 @@ export function PublicPlansPricingSlider() {
                   : 'outlined'
 
               return (
-                <article
+                <CarouselSlide
                   key={isCustomResolved ? `custom-${plan.id}` : plan.id}
-                  className={shell}
+                  index={slideIndex}
                 >
+                <article className={shell}>
                   {isPopular ? (
                     <div className="absolute -top-3 left-1/2 -translate-x-1/2">
                       <span className="rounded-full bg-primary px-4 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-white">
@@ -414,9 +419,11 @@ export function PublicPlansPricingSlider() {
                     {checkoutPlanId === plan.id ? 'Redirigiendo…' : 'Adquirir'}
                   </Button>
                 </article>
+                </CarouselSlide>
               )
             })}
-          </div>
+            </div>
+          </AnimatePresence>
         </div>
       </div>
 
