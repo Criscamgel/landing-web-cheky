@@ -42,8 +42,9 @@ export function LandingPostPaymentSignupModal({ open, onOpenChange, paymentLink 
         </h2>
         {sent ? (
           <p className="mb-6 text-sm leading-relaxed text-[#555]">
-            Te enviamos un correo con un enlace seguro para crear tu empresa y tu usuario administrador.
-            Revisa también la carpeta de spam. El enlace caduca en unos días.
+            Te enviamos <strong>dos correos</strong>: uno con el enlace seguro para completar tu registro
+            y otro con el detalle del plan que adquiriste. Revisa también la carpeta de spam. El enlace
+            de registro caduca en unos días.
           </p>
         ) : (
           <p className="mb-6 text-sm leading-relaxed text-[#555]">
@@ -75,7 +76,7 @@ export function LandingPostPaymentSignupModal({ open, onOpenChange, paymentLink 
                   email: values.email.trim(),
                 })
                 setSent(true)
-                toast.success('Listo. Revisa tu correo (y spam) para el enlace de registro.')
+                toast.success('Listo. Revisa tu correo (y spam): instrucciones de registro y confirmación del plan.')
               } catch (e) {
                 toast.error(e instanceof Error ? e.message : 'No se pudo enviar el correo')
               } finally {
