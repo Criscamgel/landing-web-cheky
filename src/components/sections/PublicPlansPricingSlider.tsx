@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/Button'
 import { IconCheck } from '@/components/icons/UiIcons'
@@ -13,6 +13,11 @@ import {
 } from '@/lib/boldCheckoutSession'
 import { LandingPlanLegalConfirmModal } from '@/components/landing/LandingPlanLegalConfirmModal'
 import { LandingBoldCheckoutBlockingOverlay } from '@/components/landing/LandingBoldCheckoutBlockingOverlay'
+import { fetchPublicPlanByName } from '@/actions/fetchPublicPlanByName.action'
+import {
+  CustomPlanSearchCard,
+  PLAN_NOT_FOUND_TOAST,
+} from '@/components/sections/CustomPlanSearchCard'
 
 /** <768: 1 tarjeta, paso 1 · 768–1023: 2 tarjetas, paso 2 · ≥1024: 3 tarjetas, paso 1 */
 function readSliderMetrics(width: number): { visible: number; step: number } {
@@ -69,6 +74,24 @@ type CatalogSlide = PublicPlanDto & {
   globalIndex: number
 }
 
+type WindowItem =
+  | { kind: 'catalog'; plan: CatalogSlide }
+  | { kind: 'custom-search' }
+  | { kind: 'custom-resolved'; plan: CatalogSlide }
+
+function toCatalogSlide(
+  plan: PublicPlanDto,
+  sorted: PublicPlanDto[],
+  globalIndex: number,
+): CatalogSlide {
+  return {
+    ...plan,
+    teaser: buildTeaser(sorted, globalIndex),
+    features: planFeatures(plan),
+    globalIndex,
+  }
+}
+
 function ChevronLeftIcon() {
   return (
     <svg
@@ -110,21 +133,25 @@ export function PublicPlansPricingSlider() {
   const [legalPlan, setLegalPlan] = useState<PublicPlanDto | null>(null)
   const [legalModalOpen, setLegalModalOpen] = useState(false)
   const [blockingBoldRedirect, setBlockingBoldRedirect] = useState(false)
+  const [resolvedCustomPlan, setResolvedCustomPlan] = useState<CatalogSlide | null>(null)
   const { visible, step } = usePricingSliderMetrics()
 
   const slides: CatalogSlide[] = useMemo(() => {
     const sorted = [...(rawPlans ?? [])].sort(
       (a, b) => a.monthlyPrice - b.monthlyPrice,
     )
-    return sorted.map((p, i) => ({
-      ...p,
-      teaser: buildTeaser(sorted, i),
-      features: planFeatures(p),
-      globalIndex: i,
-    }))
+    return sorted.map((p, i) => toCatalogSlide(p, sorted, i))
   }, [rawPlans])
 
-  const maxStart = Math.max(0, slides.length - visible)
+  const windowItems: WindowItem[] = useMemo(() => {
+    const catalog: WindowItem[] = slides.map((plan) => ({ kind: 'catalog', plan }))
+    if (resolvedCustomPlan) {
+      return [...catalog, { kind: 'custom-resolved', plan: resolvedCustomPlan }]
+    }
+    return [...catalog, { kind: 'custom-search' }]
+  }, [slides, resolvedCustomPlan])
+
+  const maxStart = Math.max(0, windowItems.length - visible)
 
   useEffect(() => {
     setStart((s) => Math.min(s, maxStart))
@@ -153,11 +180,42 @@ export function PublicPlansPricingSlider() {
   }, [])
 
   const safeStart = Math.min(start, maxStart)
-  const windowSlides = slides.slice(safeStart, safeStart + visible)
+  const windowSlice = windowItems.slice(safeStart, safeStart + visible)
   const popularGlobalIndex =
     slides.length > 0 ? Math.floor((slides.length - 1) / 2) : -1
 
-  const showArrows = slides.length > visible
+  const showArrows = windowItems.length > visible
+
+  const handleCustomPlanSearch = useCallback(
+    async (planName: string) => {
+      try {
+        const plan = await fetchPublicPlanByName(planName)
+        const sorted = [...(rawPlans ?? [])].sort(
+          (a, b) => a.monthlyPrice - b.monthlyPrice,
+        )
+        const idx = sorted.findIndex((p) => p.id === plan.id)
+        const globalIndex = idx >= 0 ? idx : sorted.length
+        const teaser =
+          idx >= 0
+            ? buildTeaser(sorted, idx)
+            : 'Plan personalizado acordado con tu vendedor.'
+        setResolvedCustomPlan({
+          ...plan,
+          teaser,
+          features: planFeatures(plan),
+          globalIndex,
+        })
+        setStart(Math.max(0, windowItems.length - visible))
+      } catch (e) {
+        if (e instanceof Error && e.message === 'NOT_FOUND') {
+          toast.error(PLAN_NOT_FOUND_TOAST)
+          return
+        }
+        toast.error(e instanceof Error ? e.message : 'No se pudo buscar el plan')
+      }
+    },
+    [rawPlans, windowItems.length, visible],
+  )
 
   const gridColsClass =
     visible === 1 ? 'grid-cols-1' : visible === 2 ? 'grid-cols-2' : 'grid-cols-3'
@@ -195,14 +253,6 @@ export function PublicPlansPricingSlider() {
           Reintentar
         </button>
       </div>
-    )
-  }
-
-  if (slides.length === 0) {
-    return (
-      <p className="py-10 text-center text-sm text-[#666]">
-        No hay planes disponibles en el catálogo por el momento.
-      </p>
     )
   }
 
@@ -278,20 +328,43 @@ export function PublicPlansPricingSlider() {
       >
         <div className="w-full pb-2">
           <div className={`mx-auto grid w-full gap-4 ${gridColsClass}`}>
-            {windowSlides.map((plan) => {
-              const isPopular = plan.globalIndex === popularGlobalIndex
+            {windowSlice.map((item) => {
+              if (item.kind === 'custom-search') {
+                return (
+                  <CustomPlanSearchCard
+                    key="custom-plan-search"
+                    onSearch={handleCustomPlanSearch}
+                    disabled={checkoutPlanId !== null}
+                  />
+                )
+              }
+
+              const plan = item.plan
+              const isCustomResolved = item.kind === 'custom-resolved'
+              const inCatalog = slides.some((s) => s.id === plan.id)
+              const isPopular =
+                inCatalog && plan.globalIndex === popularGlobalIndex
               const isEnterprise =
-                slides.length > 1 && plan.globalIndex === slides.length - 1
+                inCatalog &&
+                slides.length > 1 &&
+                plan.globalIndex === slides.length - 1
               const shell = isPopular
                 ? 'popular-card relative flex min-h-[22rem] flex-col rounded-2xl p-6 md:-translate-y-1'
                 : 'card-base flex min-h-[22rem] flex-col rounded-2xl p-6'
               const divider = isPopular
                 ? 'mb-5 border-t border-primary-100'
                 : 'mb-5 border-t border-[#e7e7e7]'
-              const ctaVariant = isPopular ? 'primary' : isEnterprise ? 'outlined' : 'outlined'
+              const ctaVariant = isPopular
+                ? 'primary'
+                : isEnterprise || isCustomResolved
+                  ? 'outlined'
+                  : 'outlined'
 
               return (
-                <article key={plan.id} className={shell}>
+                <article
+                  key={isCustomResolved ? `custom-${plan.id}` : plan.id}
+                  className={shell}
+                >
                   {isPopular ? (
                     <div className="absolute -top-3 left-1/2 -translate-x-1/2">
                       <span className="rounded-full bg-primary px-4 py-1 text-[10px] font-bold uppercase tracking-[0.12em] text-white">
