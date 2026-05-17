@@ -140,16 +140,16 @@ export const defaultLandingPage: LandingPageData = {
       {
         icon: 'users',
         iconTone: 'secondary',
-        title: 'API simple de integrar',
+        title: 'Usuarios y control del plan',
         description:
-          'Un endpoint, un JSON de respuesta. Integración en horas, no semanas.',
+          'Crea operadores, asigna sedes y consulta los checks de tu empresa desde un solo panel.',
       },
       {
         icon: 'lock',
         iconTone: 'secondary',
-        title: 'Seguro y compliant',
+        title: 'Privacidad en los informes',
         description:
-          'Datos encriptados, cumplimiento GDPR. No almacenamos datos sensibles del comprador.',
+          'Correo, documento y celular se ocultan automáticamente minutos después de cada verificación.',
       },
     ],
   },

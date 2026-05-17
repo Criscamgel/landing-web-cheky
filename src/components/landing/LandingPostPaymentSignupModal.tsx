@@ -107,6 +107,10 @@ export function LandingPostPaymentSignupModal({ open, onOpenChange, paymentLink 
                     component="p"
                     className="mt-1 text-xs text-red-600"
                   />
+                  <p className="mt-2 text-xs leading-relaxed text-[#888]">
+                    Si ya tienes cuenta en Cheky, inicia sesión en la plataforma en lugar de solicitar
+                    un nuevo registro.
+                  </p>
                 </div>
 
                 <div className="flex flex-col-reverse gap-2 pt-2 sm:flex-row sm:justify-end">
