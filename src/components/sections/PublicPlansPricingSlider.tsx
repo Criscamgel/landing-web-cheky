@@ -20,6 +20,7 @@ import {
   CustomPlanSearchCard,
   PLAN_NOT_FOUND_TOAST,
 } from '@/components/sections/CustomPlanSearchCard'
+import { formatMoneyAmount } from '@/lib/planMoney'
 
 /** <768: 1 tarjeta, paso 1 · 768–1023: 2 tarjetas, paso 2 · ≥1024: 3 tarjetas, paso 1 */
 function readSliderMetrics(width: number): { visible: number; step: number } {
@@ -382,15 +383,9 @@ export function PublicPlansPricingSlider() {
                     <h3 className="mb-1 text-sm font-semibold text-[#888]">{plan.name}</h3>
                     <div className="mb-2 flex flex-wrap items-baseline gap-1">
                       <span className="text-3xl font-bold text-[#111]">
-                        $
-                        {plan.monthlyPrice.toLocaleString('es-CO', {
-                          maximumFractionDigits: 0,
-                        })}
+                        {formatMoneyAmount(plan.monthlyPrice, plan.currency)}
                       </span>
                       <span className="text-sm text-[#999]">/mes</span>
-                      {plan.currency && plan.currency !== 'COP' ? (
-                        <span className="w-full text-xs text-[#999]">{plan.currency}</span>
-                      ) : null}
                     </div>
                     <p className="text-xs leading-relaxed text-[#999]">{plan.teaser}</p>
                   </div>
