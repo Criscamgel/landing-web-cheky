@@ -1,25 +1,38 @@
-export const DEFAULT_PLAN_CURRENCY = 'USD';
+import { DEFAULT_PLAN_CURRENCY, resolvePlanCurrencyCode } from '@/lib/planCurrencies.config';
 
-export function normalizePlanCurrency(currency?: string | null): string {
-  const t = (currency ?? '').trim().toUpperCase();
-  return t.length >= 3 ? t : DEFAULT_PLAN_CURRENCY;
-}
+export { DEFAULT_PLAN_CURRENCY, resolvePlanCurrencyCode };
+
+const INTL_LOCALE: Record<string, string> = {
+  USD: 'en-US',
+  COP: 'es-CO',
+  EUR: 'es-ES',
+  MXN: 'es-MX',
+  GBP: 'en-GB',
+  CAD: 'en-CA',
+  BRL: 'pt-BR',
+  ARS: 'es-AR',
+  CLP: 'es-CL',
+  PEN: 'es-PE',
+};
 
 export function formatMoneyAmount(
   amount: number,
   currency?: string | null,
 ): string {
-  const cur = normalizePlanCurrency(currency);
+  const cur = resolvePlanCurrencyCode(currency);
   const n = Number(amount);
   if (!Number.isFinite(n)) return `— ${cur}`;
-  if (cur === 'USD') {
-    return new Intl.NumberFormat('en-US', {
+  try {
+    return new Intl.NumberFormat(INTL_LOCALE[cur] ?? 'en-US', {
       style: 'currency',
-      currency: 'USD',
+      currency: cur,
       maximumFractionDigits: 0,
     }).format(n);
+  } catch {
+    return `${n.toLocaleString(INTL_LOCALE[cur] ?? 'en-US', {
+      maximumFractionDigits: 0,
+    })} ${cur}`;
   }
-  return `$${n.toLocaleString('es-CO', { maximumFractionDigits: 0 })} ${cur}`;
 }
 
 export function formatMonthlyPlanPrice(
