@@ -7,5 +7,6 @@ printf 'window.__CHEKY_ENV__=%s;\n' "$(jq -n \
   --arg a "${VITE_API_URL:-}" \
   --arg s "${VITE_STRAPI_URL:-}" \
   --arg t "${VITE_STRAPI_API_TOKEN:-}" \
-  '{VITE_API_URL:$a,VITE_STRAPI_URL:$s,VITE_STRAPI_API_TOKEN:$t}')" >"$OUT"
+  --arg ts "${VITE_TURNSTILE_SITE_KEY:-}" \
+  '{VITE_API_URL:$a,VITE_STRAPI_URL:$s,VITE_STRAPI_API_TOKEN:$t,VITE_TURNSTILE_SITE_KEY:$ts}')" >"$OUT"
 exec nginx -g "daemon off;"
