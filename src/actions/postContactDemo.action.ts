@@ -7,6 +7,7 @@ export interface ContactDemoPayload {
   email: string
   company: string
   volume: string
+  turnstileToken?: string
 }
 
 export interface ContactDemoApiEnvelope {

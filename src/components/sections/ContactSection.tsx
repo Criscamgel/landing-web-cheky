@@ -1,4 +1,6 @@
 import { useMemo, useState } from 'react'
+import { TurnstileField } from '@/components/security/TurnstileField'
+import { isTurnstileConfigured } from '@/lib/turnstile.config'
 import { ErrorMessage, Field, Form, Formik } from 'formik'
 import {
   IconArrowRight,
@@ -48,6 +50,8 @@ function HighlightIcon({ name }: { name: ContactHighlightIcon }) {
 export function ContactSection({ content }: Props) {
   const { mutate, isPending } = useContactDemoMutation()
   const [locked, setLocked] = useState(() => hasContactDemoBeenSentInSession())
+  const [turnstileToken, setTurnstileToken] = useState('')
+  const turnstileRequired = isTurnstileConfigured()
 
   const initialValues = useMemo(() => {
     const o: Record<string, string> = {}
@@ -102,11 +106,20 @@ export function ContactSection({ content }: Props) {
                   return
                 }
 
+                if (turnstileRequired && !turnstileToken.trim()) {
+                  toast.error('Completa la verificación de seguridad.')
+                  setSubmitting(false)
+                  return
+                }
+
                 const payload: ContactDemoPayload = {
                   name: values.name,
                   email: values.email,
                   company: values.company,
                   volume: values.volume,
+                  ...(turnstileToken.trim()
+                    ? { turnstileToken: turnstileToken.trim() }
+                    : {}),
                 }
 
                 mutate(payload, {
@@ -165,10 +178,20 @@ export function ContactSection({ content }: Props) {
                     </div>
                   ))}
 
+                  <TurnstileField
+                    className="flex justify-center pt-1"
+                    onToken={setTurnstileToken}
+                  />
+
                   <Button
                     type="submit"
                     variant="primary"
-                    disabled={locked || isSubmitting || isPending}
+                    disabled={
+                      locked ||
+                      isSubmitting ||
+                      isPending ||
+                      (turnstileRequired && !turnstileToken.trim())
+                    }
                     className="w-full text-sm font-semibold py-2.5 rounded-lg flex items-center justify-center gap-2 mt-1 opacity-100 disabled:opacity-50 disabled:pointer-events-none"
                   >
                     {content.submitLabel}
