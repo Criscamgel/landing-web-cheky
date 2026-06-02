@@ -29,7 +29,7 @@ export function LandingPage({ data }: Props) {
   return (
     <>
       <Navbar content={data.navbar} />
-      <main>
+      <main className="overflow-x-hidden">
         <HeroSection content={data.hero} />
         <StatsBar items={data.stats} />
         <HowItWorksSection content={data.howItWorks} />
