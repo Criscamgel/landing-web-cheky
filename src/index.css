@@ -3,8 +3,12 @@
 @tailwind utilities;
 
 @layer base {
+  html {
+    overflow-x: hidden;
+  }
   body {
     @apply font-inter bg-white text-[#111111] antialiased;
+    overflow-x: hidden;
   }
 }
 
