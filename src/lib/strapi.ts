@@ -106,26 +106,24 @@ export async function fetchLandingFromStrapi(
 function normalizeStrapiFields(data: LandingPageData): LandingPageData {
   if (data.pricing?.plans) {
     data.pricing.plans = data.pricing.plans.map((plan) => {
-      const raw = plan as Record<string, unknown>
-      if ('planId' in raw && !('id' in raw)) {
-        return { ...plan, id: raw.planId as string }
+      if ('planId' in (plan as object) && !plan.id) {
+        return { ...plan, id: (plan as unknown as { planId: string }).planId }
       }
       return plan
     })
   }
 
   // Strapi usa `formFields` porque `fields` es palabra reservada
-  const contactRaw = data.contact as Record<string, unknown> | undefined
-  if (contactRaw && 'formFields' in contactRaw && !('fields' in contactRaw)) {
-    contactRaw.fields = contactRaw.formFields
-    delete contactRaw.formFields
+  const contact = data.contact
+  if (contact && 'formFields' in (contact as object) && !contact.fields) {
+    const raw = contact as unknown as { formFields: typeof contact.fields }
+    contact.fields = raw.formFields
   }
 
   if (data.contact?.fields) {
     data.contact.fields = data.contact.fields.map((field) => {
-      const raw = field as Record<string, unknown>
-      if ('fieldId' in raw && !('id' in raw)) {
-        return { ...field, id: raw.fieldId as string }
+      if ('fieldId' in (field as object) && !field.id) {
+        return { ...field, id: (field as unknown as { fieldId: string }).fieldId }
       }
       return field
     })
