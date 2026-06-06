@@ -41,6 +41,29 @@ export function getStrapiUrl(): string | undefined {
 }
 
 /**
+ * Construye los query params de populate profundo para el Single Type landing-page.
+ * Strapi 5 con `populate=*` solo baja 1 nivel; componentes anidados requieren populate explícito.
+ */
+function buildDeepPopulate(): string {
+  const params = new URLSearchParams()
+
+  // Nivel 1 (componentes directos sin sub-componentes)
+  const topLevel = ['seo', 'stats', 'pricing']
+  topLevel.forEach((field) => params.append(`populate[${field}]`, '*'))
+
+  // Nivel 2 (componentes con sub-componentes)
+  params.append('populate[navbar][populate]', '*')
+  params.append('populate[hero][populate]', '*')
+  params.append('populate[howItWorks][populate]', '*')
+  params.append('populate[benefits][populate]', '*')
+  params.append('populate[contact][populate][highlights]', '*')
+  params.append('populate[contact][populate][formFields]', '*')
+  params.append('populate[footer][populate]', '*')
+
+  return params.toString()
+}
+
+/**
  * GET al single type configurado en Strapi. Ajusta el path (`/api/landing-page`) al UID real.
  * Usa `VITE_STRAPI_API_TOKEN` opcional para endpoints protegidos.
  */
@@ -56,7 +79,7 @@ export async function fetchLandingFromStrapi(
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
   }
 
-  const url = `${base}${path.startsWith('/') ? path : `/${path}`}?populate=*`
+  const url = `${base}${path.startsWith('/') ? path : `/${path}`}?${buildDeepPopulate()}`
   const res = await fetch(url, { headers })
 
   if (!res.ok) {
@@ -71,5 +94,42 @@ export async function fetchLandingFromStrapi(
     return defaultLandingPage
   }
 
-  return parsed
+  return normalizeStrapiFields(parsed)
+}
+
+/**
+ * Normaliza campos de Strapi que difieren del modelo del frontend.
+ * - Strapi usa `planId` (porque `id` es reservado) → el frontend espera `id`.
+ * - Strapi usa `formFields` (porque `fields` es reservado) → el frontend espera `fields`.
+ * - Normaliza `fieldId` → `id` en campos de contacto.
+ */
+function normalizeStrapiFields(data: LandingPageData): LandingPageData {
+  if (data.pricing?.plans) {
+    data.pricing.plans = data.pricing.plans.map((plan) => {
+      const raw = plan as Record<string, unknown>
+      if ('planId' in raw && !('id' in raw)) {
+        return { ...plan, id: raw.planId as string }
+      }
+      return plan
+    })
+  }
+
+  // Strapi usa `formFields` porque `fields` es palabra reservada
+  const contactRaw = data.contact as Record<string, unknown> | undefined
+  if (contactRaw && 'formFields' in contactRaw && !('fields' in contactRaw)) {
+    contactRaw.fields = contactRaw.formFields
+    delete contactRaw.formFields
+  }
+
+  if (data.contact?.fields) {
+    data.contact.fields = data.contact.fields.map((field) => {
+      const raw = field as Record<string, unknown>
+      if ('fieldId' in raw && !('id' in raw)) {
+        return { ...field, id: raw.fieldId as string }
+      }
+      return field
+    })
+  }
+
+  return data
 }
