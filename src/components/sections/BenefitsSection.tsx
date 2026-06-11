@@ -6,7 +6,7 @@ type Props = { content: BenefitsSectionContent }
 
 export function BenefitsSection({ content }: Props) {
   return (
-    <section className="py-16 px-5 section-alt">
+    <section id="beneficios" className="py-16 px-5 section-alt">
       <div className="max-w-4xl mx-auto">
         <SectionHeading
           overline={content.overline}
