@@ -307,9 +307,10 @@ export function AppointmentScheduler() {
             const hasSlots = availableDatesSet.has(dateStr)
             const isSelected = dateStr === selectedDate
 
-            // A day is clickable if: it's not past, it's a weekday, and the API says it has slots
-            // BUT if data is still loading, allow clicking weekdays that aren't past
-            const isClickable = !past && weekday && (slotsLoading || hasSlots)
+            // Un día es clickeable si: no es pasado y es día hábil (lun-vie).
+            // Si la API ya respondió y ese día NO tiene slots, se muestra deshabilitado visualmente
+            // pero aún así permitimos clic para mostrar "no hay horarios".
+            const isClickable = !past && weekday
 
             return (
               <button
@@ -322,12 +323,20 @@ export function AppointmentScheduler() {
                     ? 'bg-white text-primary-700 shadow-sm font-bold'
                     : ''
                   }
-                  ${isClickable && !isSelected
+                  ${isClickable && !isSelected && hasSlots
                     ? 'text-white hover:bg-white/15 cursor-pointer'
                     : ''
                   }
+                  ${isClickable && !isSelected && !hasSlots && !slotsLoading
+                    ? 'text-white/40 hover:bg-white/10 cursor-pointer'
+                    : ''
+                  }
+                  ${isClickable && !isSelected && slotsLoading
+                    ? 'text-white/70 hover:bg-white/10 cursor-pointer'
+                    : ''
+                  }
                   ${!isClickable
-                    ? 'text-white/25 cursor-not-allowed'
+                    ? 'text-white/20 cursor-not-allowed'
                     : ''
                   }
                 `}

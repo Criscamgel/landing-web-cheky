@@ -31,12 +31,12 @@ export default {
           900: '#573422',
         },
         surface: {
-          DEFAULT: '#F4F0EC',
+          DEFAULT: '#FAFAF7',
           50: '#fdfcfb',
-          100: '#F4F0EC',
-          200: '#ebe5df',
-          300: '#ddd4cb',
-          400: '#c9bdb2',
+          100: '#FAFAF7',
+          200: '#f3f3ef',
+          300: '#eaeae5',
+          400: '#ddddd8',
         },
       },
       fontFamily: {
