@@ -1,7 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useAppointmentConfig, useAvailableSlots, useBookAppointment } from '@/hooks/useAppointments'
-import { TurnstileField } from '@/components/security/TurnstileField'
-import { isTurnstileConfigured } from '@/lib/turnstile.config'
 import { Button } from '@/components/ui/Button'
 import { IconArrowRight } from '@/components/icons/UiIcons'
 import type { BookAppointmentPayload } from '@/actions/appointments.action'
@@ -80,8 +78,6 @@ export function AppointmentScheduler() {
   const [email, setEmail] = useState('')
   const [company, setCompany] = useState('')
   const [phone, setPhone] = useState('')
-  const [turnstileToken, setTurnstileToken] = useState('')
-  const turnstileRequired = isTurnstileConfigured()
 
   const monthStr = getMonthStr(viewYear, viewMonth)
   const { data: slotsData, isLoading: slotsLoading } = useAvailableSlots(
@@ -194,7 +190,6 @@ export function AppointmentScheduler() {
       date: selectedDate,
       startTime: selectedSlot,
       duration: selectedDuration,
-      ...(turnstileToken.trim() ? { turnstileToken: turnstileToken.trim() } : {}),
     }
 
     book(payload, {
