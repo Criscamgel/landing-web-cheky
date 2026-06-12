@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useAppointmentConfig, useAvailableSlots, useBookAppointment } from '@/hooks/useAppointments'
 import { TurnstileField } from '@/components/security/TurnstileField'
 import { isTurnstileConfigured } from '@/lib/turnstile.config'
@@ -45,7 +45,20 @@ function formatReadableDate(dateStr: string) {
   return `${days[dt.getDay()]} ${d} de ${MONTHS_ES[m - 1]} de ${y}`
 }
 
-// ─── Sub-components ──────────────────────────────────────────
+function isWeekday(year: number, month: number, day: number) {
+  const d = new Date(year, month, day)
+  const dow = d.getDay()
+  return dow >= 1 && dow <= 5
+}
+
+function isPastDay(year: number, month: number, day: number) {
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  const check = new Date(year, month, day)
+  return check < today
+}
+
+// ─── Component ───────────────────────────────────────────────
 
 type Step = 'select-slot' | 'confirm'
 
@@ -76,6 +89,18 @@ export function AppointmentScheduler() {
     selectedDuration,
   )
 
+  // Set default duration from config once loaded
+  useEffect(() => {
+    if (config?.allowedDurations?.length) {
+      // Default to 30 if available, otherwise first option
+      if (config.allowedDurations.includes(30)) {
+        setSelectedDuration(30)
+      } else {
+        setSelectedDuration(config.allowedDurations[0])
+      }
+    }
+  }, [config])
+
   const availableDatesSet = useMemo(() => {
     const set = new Set<string>()
     if (slotsData?.days) {
@@ -95,7 +120,27 @@ export function AppointmentScheduler() {
     [viewYear, viewMonth],
   )
 
+  // Determine if we can go to previous month (don't allow past months)
+  const canGoPrev = useMemo(() => {
+    const currentMonth = now.getMonth()
+    const currentYear = now.getFullYear()
+    // Can go back only if viewing a month after current
+    if (viewYear > currentYear) return true
+    if (viewYear === currentYear && viewMonth > currentMonth) return true
+    return false
+  }, [viewYear, viewMonth])
+
+  // Determine max advance (don't allow beyond config.maxAdvanceDays)
+  const canGoNext = useMemo(() => {
+    const maxDays = config?.maxAdvanceDays ?? 30
+    const maxDate = new Date()
+    maxDate.setDate(maxDate.getDate() + maxDays)
+    const nextMonthStart = new Date(viewYear, viewMonth + 1, 1)
+    return nextMonthStart <= maxDate
+  }, [viewYear, viewMonth, config])
+
   const goToPrevMonth = useCallback(() => {
+    if (!canGoPrev) return
     if (viewMonth === 0) {
       setViewMonth(11)
       setViewYear((y) => y - 1)
@@ -104,9 +149,10 @@ export function AppointmentScheduler() {
     }
     setSelectedDate(null)
     setSelectedSlot(null)
-  }, [viewMonth])
+  }, [viewMonth, canGoPrev])
 
   const goToNextMonth = useCallback(() => {
+    if (!canGoNext) return
     if (viewMonth === 11) {
       setViewMonth(0)
       setViewYear((y) => y + 1)
@@ -115,15 +161,13 @@ export function AppointmentScheduler() {
     }
     setSelectedDate(null)
     setSelectedSlot(null)
-  }, [viewMonth])
+  }, [viewMonth, canGoNext])
 
   const handleDayClick = (day: number) => {
     const dateStr = `${viewYear}-${String(viewMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
-    if (availableDatesSet.has(dateStr)) {
-      setSelectedDate(dateStr)
-      setSelectedSlot(null)
-      setStep('select-slot')
-    }
+    setSelectedDate(dateStr)
+    setSelectedSlot(null)
+    setStep('select-slot')
   }
 
   const handleSlotClick = (slot: string) => {
@@ -170,7 +214,7 @@ export function AppointmentScheduler() {
   // Success state
   if (booked) {
     return (
-      <div className="text-center py-12 px-6">
+      <div className="card-base rounded-2xl text-center py-12 px-6">
         <div className="text-4xl mb-4">✅</div>
         <h3 className="text-xl font-bold text-[#111] mb-2">
           ¡Cita agendada!
@@ -194,9 +238,10 @@ export function AppointmentScheduler() {
   }
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-0 rounded-2xl overflow-hidden border border-gray-200 shadow-sm">
+    <div className="card-base grid grid-cols-1 lg:grid-cols-2 gap-0 rounded-2xl overflow-hidden">
       {/* ─── Panel Izquierdo: Calendario ─── */}
-      <div className="bg-[#0f1b2d] text-white p-6 lg:p-8">
+      <div className="bg-primary-600 text-white p-6 lg:p-8">
+        {/* Logo */}
         <div className="flex items-center justify-center mb-4">
           <img
             src="/navbar-logo.png"
@@ -213,7 +258,12 @@ export function AppointmentScheduler() {
           <button
             type="button"
             onClick={goToPrevMonth}
-            className="text-white/70 hover:text-white p-1"
+            disabled={!canGoPrev}
+            className={`p-1 rounded transition-colors ${
+              canGoPrev
+                ? 'text-white/70 hover:text-white hover:bg-white/10'
+                : 'text-white/20 cursor-not-allowed'
+            }`}
             aria-label="Mes anterior"
           >
             ‹
@@ -224,7 +274,12 @@ export function AppointmentScheduler() {
           <button
             type="button"
             onClick={goToNextMonth}
-            className="text-white/70 hover:text-white p-1"
+            disabled={!canGoNext}
+            className={`p-1 rounded transition-colors ${
+              canGoNext
+                ? 'text-white/70 hover:text-white hover:bg-white/10'
+                : 'text-white/20 cursor-not-allowed'
+            }`}
             aria-label="Mes siguiente"
           >
             ›
@@ -234,7 +289,7 @@ export function AppointmentScheduler() {
         {/* Encabezados días */}
         <div className="grid grid-cols-7 gap-1 mb-2">
           {DAYS_ES.map((d) => (
-            <div key={d} className="text-center text-[10px] font-medium text-white/50 uppercase">
+            <div key={d} className="text-center text-[10px] font-medium text-white/60 uppercase">
               {d}
             </div>
           ))}
@@ -247,19 +302,34 @@ export function AppointmentScheduler() {
               return <div key={`empty-${i}`} className="h-9" />
 
             const dateStr = `${viewYear}-${String(viewMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
-            const isAvailable = availableDatesSet.has(dateStr)
+            const past = isPastDay(viewYear, viewMonth, day)
+            const weekday = isWeekday(viewYear, viewMonth, day)
+            const hasSlots = availableDatesSet.has(dateStr)
             const isSelected = dateStr === selectedDate
+
+            // A day is clickable if: it's not past, it's a weekday, and the API says it has slots
+            // BUT if data is still loading, allow clicking weekdays that aren't past
+            const isClickable = !past && weekday && (slotsLoading || hasSlots)
 
             return (
               <button
                 key={dateStr}
                 type="button"
-                disabled={!isAvailable}
-                onClick={() => handleDayClick(day)}
-                className={`h-9 w-full rounded-lg text-sm font-medium transition-colors
-                  ${isSelected ? 'bg-primary-500 text-white' : ''}
-                  ${isAvailable && !isSelected ? 'text-white hover:bg-white/10 cursor-pointer' : ''}
-                  ${!isAvailable ? 'text-white/20 cursor-default' : ''}
+                disabled={!isClickable}
+                onClick={() => isClickable && handleDayClick(day)}
+                className={`h-9 w-full rounded-lg text-sm font-medium transition-all duration-200
+                  ${isSelected
+                    ? 'bg-white text-primary-700 shadow-sm font-bold'
+                    : ''
+                  }
+                  ${isClickable && !isSelected
+                    ? 'text-white hover:bg-white/15 cursor-pointer'
+                    : ''
+                  }
+                  ${!isClickable
+                    ? 'text-white/25 cursor-not-allowed'
+                    : ''
+                  }
                 `}
               >
                 {day}
@@ -267,6 +337,13 @@ export function AppointmentScheduler() {
             )
           })}
         </div>
+
+        {/* Loading indicator */}
+        {slotsLoading && (
+          <p className="text-[11px] text-white/50 text-center mt-3 animate-pulse-slow">
+            Consultando disponibilidad…
+          </p>
+        )}
       </div>
 
       {/* ─── Panel Derecho: Slots + Form ─── */}
@@ -275,17 +352,17 @@ export function AppointmentScheduler() {
           <>
             {/* Ubicación */}
             <div className="mb-5">
-              <p className="text-xs font-medium text-[#666] uppercase tracking-wider mb-1">
+              <p className="text-[11px] font-semibold text-[#555] uppercase tracking-wider mb-1">
                 Ubicación de la reunión
               </p>
               <p className="text-sm text-[#111] flex items-center gap-1.5">
-                <span className="text-primary-500">📍</span> Videollamada (Jitsi Meet)
+                <span className="text-primary">📍</span> Videollamada (Jitsi Meet)
               </p>
             </div>
 
             {/* Duración */}
             <div className="mb-5">
-              <p className="text-xs font-medium text-[#666] uppercase tracking-wider mb-2">
+              <p className="text-[11px] font-semibold text-[#555] uppercase tracking-wider mb-2.5">
                 ¿Cuánto tiempo necesitas?
               </p>
               <div className="flex flex-wrap gap-2">
@@ -294,10 +371,10 @@ export function AppointmentScheduler() {
                     key={d}
                     type="button"
                     onClick={() => handleDurationChange(d)}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors
+                    className={`px-3.5 py-2 rounded-lg text-xs font-medium border transition-all duration-200
                       ${selectedDuration === d
-                        ? 'bg-primary-50 border-primary-300 text-primary-700'
-                        : 'border-gray-200 text-[#666] hover:border-gray-300'
+                        ? 'bg-primary-50 border-primary text-primary-700 shadow-[0_0_0_1px_rgba(21,118,52,0.15)]'
+                        : 'border-[#e0e0e0] text-[#555] hover:border-primary-300 hover:text-primary-600'
                       }
                     `}
                   >
@@ -310,28 +387,35 @@ export function AppointmentScheduler() {
             {/* Slots */}
             {selectedDate ? (
               <div>
-                <p className="text-xs font-medium text-[#666] uppercase tracking-wider mb-1">
+                <p className="text-[11px] font-semibold text-[#555] uppercase tracking-wider mb-1">
                   ¿A qué hora puedes?
                 </p>
-                <p className="text-[11px] text-[#999] mb-3">
-                  Mostrando horarios para el <strong>{formatReadableDate(selectedDate)}</strong>
+                <p className="text-[11px] text-[#888] mb-2">
+                  Mostrando horarios para el <strong className="text-[#555]">{formatReadableDate(selectedDate)}</strong>
                 </p>
-                <p className="text-[10px] text-primary-600 mb-3">
+                <p className="text-[10px] text-primary font-medium mb-3">
                   UTC -05:00 Colombia
                 </p>
 
                 {slotsLoading ? (
-                  <p className="text-xs text-[#888]">Cargando horarios…</p>
+                  <div className="flex items-center gap-2 py-4">
+                    <div className="w-3 h-3 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                    <p className="text-xs text-[#888]">Cargando horarios…</p>
+                  </div>
                 ) : slotsForSelectedDate.length === 0 ? (
-                  <p className="text-xs text-[#888]">No hay horarios disponibles para este día.</p>
+                  <div className="py-4 px-3 bg-surface-100 rounded-lg">
+                    <p className="text-xs text-[#888] text-center">
+                      No hay horarios disponibles para este día. Prueba con otra fecha.
+                    </p>
+                  </div>
                 ) : (
-                  <div className="max-h-52 overflow-y-auto space-y-2 pr-1">
+                  <div className="max-h-52 overflow-y-auto space-y-1.5 pr-1 scrollbar-thin">
                     {slotsForSelectedDate.map((slot) => (
                       <button
                         key={slot}
                         type="button"
                         onClick={() => handleSlotClick(slot)}
-                        className="w-full py-2.5 px-4 rounded-lg border border-gray-200 text-sm text-[#111] font-medium hover:border-primary-300 hover:bg-primary-50 transition-colors text-center"
+                        className="w-full py-2.5 px-4 rounded-lg border border-[#e0e0e0] text-sm text-[#111] font-medium hover:border-primary hover:bg-primary-50 hover:text-primary-700 transition-all duration-200 text-center"
                       >
                         {slot}
                       </button>
@@ -340,9 +424,11 @@ export function AppointmentScheduler() {
                 )}
               </div>
             ) : (
-              <p className="text-sm text-[#888] mt-6">
-                Selecciona un día en el calendario para ver los horarios disponibles.
-              </p>
+              <div className="flex items-center justify-center py-8">
+                <p className="text-sm text-[#888] text-center max-w-[220px]">
+                  Selecciona un día en el calendario para ver los horarios disponibles.
+                </p>
+              </div>
             )}
           </>
         )}
@@ -429,7 +515,7 @@ export function AppointmentScheduler() {
               <button
                 type="button"
                 onClick={() => setStep('select-slot')}
-                className="flex-1 py-2.5 rounded-lg text-sm font-medium border border-gray-200 text-[#666] hover:bg-gray-50 transition-colors"
+                className="flex-1 py-2.5 rounded-lg text-sm font-medium border border-[#e0e0e0] text-[#555] hover:bg-surface-50 hover:border-[#ccc] transition-all duration-200"
               >
                 ← Volver
               </button>
