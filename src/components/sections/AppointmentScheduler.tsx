@@ -515,11 +515,6 @@ export function AppointmentScheduler() {
               />
             </div>
 
-            <TurnstileField
-              className="flex justify-center pt-1"
-              onToken={setTurnstileToken}
-            />
-
             <div className="flex gap-2 pt-2">
               <button
                 type="button"
@@ -535,8 +530,7 @@ export function AppointmentScheduler() {
                   booking ||
                   !name.trim() ||
                   !email.trim() ||
-                  !company.trim() ||
-                  (turnstileRequired && !turnstileToken.trim())
+                  !company.trim()
                 }
                 className="flex-1 text-sm font-semibold py-2.5 rounded-lg flex items-center justify-center gap-2 disabled:opacity-50 disabled:pointer-events-none"
               >
