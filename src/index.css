@@ -7,7 +7,7 @@
     overflow-x: hidden;
   }
   body {
-    @apply font-inter bg-white text-[#111111] antialiased;
+    @apply font-inter bg-surface text-[#111111] antialiased;
     overflow-x: hidden;
   }
 }
@@ -59,7 +59,7 @@
   }
 
   .section-alt {
-    @apply bg-[#f8f8f8];
+    @apply bg-surface-200;
   }
 
   select.inp {
