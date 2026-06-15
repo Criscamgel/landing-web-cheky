@@ -6,6 +6,7 @@ import { ContactSection } from '@/components/sections/ContactSection'
 import { HeroSection } from '@/components/sections/HeroSection'
 import { HowItWorksSection } from '@/components/sections/HowItWorksSection'
 import { PricingSection } from '@/components/sections/PricingSection'
+import { ResultPreviewSection } from '@/components/sections/ResultPreviewSection'
 import { StatsBar } from '@/components/sections/StatsBar'
 import type { LandingPageData } from '@/types/landing'
 
@@ -33,6 +34,7 @@ export function LandingPage({ data }: Props) {
         <HeroSection content={data.hero} />
         <StatsBar items={data.stats} />
         <HowItWorksSection content={data.howItWorks} />
+        <ResultPreviewSection />
         <BenefitsSection content={data.benefits} />
         <PricingSection content={data.pricing} />
         <ContactSection content={data.contact} />
