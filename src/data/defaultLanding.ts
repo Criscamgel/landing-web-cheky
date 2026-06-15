@@ -53,6 +53,12 @@ export const defaultLandingPage: LandingPageData = {
         description:
           'Obtén el patrón de comportamiento de tu cliente al instante',
       },
+      {
+        step: '4',
+        title: 'Toma decisiones con confianza',
+        description:
+          'Usa el score para aprobar o rechazar operaciones con respaldo de datos reales.',
+      },
     ],
   },
   pricing: {
@@ -70,7 +76,7 @@ export const defaultLandingPage: LandingPageData = {
           { text: '100 checks / mes' },
           { text: 'Score de confiabilidad 0–100' },
           { text: 'Desglose por factor' },
-          { text: '1 usuario' },
+          { text: '3 usuarios' },
           { text: 'Soporte por email' },
         ],
         ctaLabel: 'Comenzar prueba',
