@@ -67,7 +67,7 @@ export function AppointmentScheduler() {
   const now = new Date()
   const [viewYear, setViewYear] = useState(now.getFullYear())
   const [viewMonth, setViewMonth] = useState(now.getMonth())
-  const [selectedDuration, setSelectedDuration] = useState(30)
+  const [selectedDuration, setSelectedDuration] = useState(60)
   const [selectedDate, setSelectedDate] = useState<string | null>(null)
   const [selectedSlot, setSelectedSlot] = useState<string | null>(null)
   const [step, setStep] = useState<Step>('select-slot')
@@ -85,16 +85,9 @@ export function AppointmentScheduler() {
     selectedDuration,
   )
 
-  // Set default duration from config once loaded
+  // Duration is fixed at 60 minutes (1 hour)
   useEffect(() => {
-    if (config?.allowedDurations?.length) {
-      // Default to 30 if available, otherwise first option
-      if (config.allowedDurations.includes(30)) {
-        setSelectedDuration(30)
-      } else {
-        setSelectedDuration(config.allowedDurations[0])
-      }
-    }
+    setSelectedDuration(60)
   }, [config])
 
   const availableDatesSet = useMemo(() => {
@@ -364,28 +357,12 @@ export function AppointmentScheduler() {
               </p>
             </div>
 
-            {/* Duración */}
+            {/* Duración fija */}
             <div className="mb-5">
-              <p className="text-[11px] font-semibold text-[#555] uppercase tracking-wider mb-2.5">
-                ¿Cuánto tiempo necesitas?
+              <p className="text-[11px] font-semibold text-[#555] uppercase tracking-wider mb-1">
+                Duración de la reunión
               </p>
-              <div className="flex flex-wrap gap-2">
-                {allowedDurations.map((d) => (
-                  <button
-                    key={d}
-                    type="button"
-                    onClick={() => handleDurationChange(d)}
-                    className={`px-3.5 py-2 rounded-lg text-xs font-medium border transition-all duration-200
-                      ${selectedDuration === d
-                        ? 'bg-primary-50 border-primary text-primary-700 shadow-[0_0_0_1px_rgba(21,118,52,0.15)]'
-                        : 'border-[#e0e0e0] text-[#555] hover:border-primary-300 hover:text-primary-600'
-                      }
-                    `}
-                  >
-                    {durationLabels[d] ?? `${d} min`}
-                  </button>
-                ))}
-              </div>
+              <p className="text-sm text-[#111] font-medium">1 hora</p>
             </div>
 
             {/* Slots */}
