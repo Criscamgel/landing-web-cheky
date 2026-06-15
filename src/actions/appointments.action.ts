@@ -50,32 +50,29 @@ export interface BookAppointmentResponse {
 // ─── API Calls ───────────────────────────────────────────────
 
 export async function fetchAppointmentConfig(): Promise<AppointmentPublicConfig> {
-  const { data } = await landingApi.get<AppointmentPublicConfig>(
-    '/public/appointments/config',
-  )
-  return data
+  const { data } = await landingApi.get('/public/appointments/config')
+  // El backend envuelve en { success, data: {...} }
+  return data?.data ?? data
 }
 
 export async function fetchAvailableSlots(
   month: string,
   duration: number,
 ): Promise<AvailableSlotsResponse> {
-  const { data } = await landingApi.get<AvailableSlotsResponse>(
-    '/public/appointments/available-slots',
-    { params: { month, duration } },
-  )
-  return data
+  const { data } = await landingApi.get('/public/appointments/available-slots', {
+    params: { month, duration },
+  })
+  // El backend envuelve en { success, data: {...} }
+  return data?.data ?? data
 }
 
 export async function bookAppointment(
   payload: BookAppointmentPayload,
 ): Promise<BookAppointmentResponse> {
   try {
-    const { data } = await landingApi.post<BookAppointmentResponse>(
-      '/public/appointments/book',
-      payload,
-    )
-    return data
+    const { data } = await landingApi.post('/public/appointments/book', payload)
+    // El backend envuelve en { success, data: {...} }
+    return data?.data ? { ...data, data: data.data } : data
   } catch (error) {
     if (axios.isAxiosError(error)) {
       const body = error.response?.data as { message?: string | string[] }

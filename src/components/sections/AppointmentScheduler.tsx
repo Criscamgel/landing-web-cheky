@@ -1,7 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useAppointmentConfig, useAvailableSlots, useBookAppointment } from '@/hooks/useAppointments'
-import { TurnstileField } from '@/components/security/TurnstileField'
-import { isTurnstileConfigured } from '@/lib/turnstile.config'
 import { Button } from '@/components/ui/Button'
 import { IconArrowRight } from '@/components/icons/UiIcons'
 import type { BookAppointmentPayload } from '@/actions/appointments.action'
@@ -69,7 +67,7 @@ export function AppointmentScheduler() {
   const now = new Date()
   const [viewYear, setViewYear] = useState(now.getFullYear())
   const [viewMonth, setViewMonth] = useState(now.getMonth())
-  const [selectedDuration, setSelectedDuration] = useState(30)
+  const [selectedDuration, setSelectedDuration] = useState(60)
   const [selectedDate, setSelectedDate] = useState<string | null>(null)
   const [selectedSlot, setSelectedSlot] = useState<string | null>(null)
   const [step, setStep] = useState<Step>('select-slot')
@@ -80,8 +78,6 @@ export function AppointmentScheduler() {
   const [email, setEmail] = useState('')
   const [company, setCompany] = useState('')
   const [phone, setPhone] = useState('')
-  const [turnstileToken, setTurnstileToken] = useState('')
-  const turnstileRequired = isTurnstileConfigured()
 
   const monthStr = getMonthStr(viewYear, viewMonth)
   const { data: slotsData, isLoading: slotsLoading } = useAvailableSlots(
@@ -89,16 +85,9 @@ export function AppointmentScheduler() {
     selectedDuration,
   )
 
-  // Set default duration from config once loaded
+  // Duration is fixed at 60 minutes (1 hour)
   useEffect(() => {
-    if (config?.allowedDurations?.length) {
-      // Default to 30 if available, otherwise first option
-      if (config.allowedDurations.includes(30)) {
-        setSelectedDuration(30)
-      } else {
-        setSelectedDuration(config.allowedDurations[0])
-      }
-    }
+    setSelectedDuration(60)
   }, [config])
 
   const availableDatesSet = useMemo(() => {
@@ -194,7 +183,6 @@ export function AppointmentScheduler() {
       date: selectedDate,
       startTime: selectedSlot,
       duration: selectedDuration,
-      ...(turnstileToken.trim() ? { turnstileToken: turnstileToken.trim() } : {}),
     }
 
     book(payload, {
@@ -369,28 +357,12 @@ export function AppointmentScheduler() {
               </p>
             </div>
 
-            {/* Duración */}
+            {/* Duración fija */}
             <div className="mb-5">
-              <p className="text-[11px] font-semibold text-[#555] uppercase tracking-wider mb-2.5">
-                ¿Cuánto tiempo necesitas?
+              <p className="text-[11px] font-semibold text-[#555] uppercase tracking-wider mb-1">
+                Duración de la reunión
               </p>
-              <div className="flex flex-wrap gap-2">
-                {allowedDurations.map((d) => (
-                  <button
-                    key={d}
-                    type="button"
-                    onClick={() => handleDurationChange(d)}
-                    className={`px-3.5 py-2 rounded-lg text-xs font-medium border transition-all duration-200
-                      ${selectedDuration === d
-                        ? 'bg-primary-50 border-primary text-primary-700 shadow-[0_0_0_1px_rgba(21,118,52,0.15)]'
-                        : 'border-[#e0e0e0] text-[#555] hover:border-primary-300 hover:text-primary-600'
-                      }
-                    `}
-                  >
-                    {durationLabels[d] ?? `${d} min`}
-                  </button>
-                ))}
-              </div>
+              <p className="text-sm text-[#111] font-medium">1 hora</p>
             </div>
 
             {/* Slots */}
@@ -515,11 +487,6 @@ export function AppointmentScheduler() {
               />
             </div>
 
-            <TurnstileField
-              className="flex justify-center pt-1"
-              onToken={setTurnstileToken}
-            />
-
             <div className="flex gap-2 pt-2">
               <button
                 type="button"
@@ -535,8 +502,7 @@ export function AppointmentScheduler() {
                   booking ||
                   !name.trim() ||
                   !email.trim() ||
-                  !company.trim() ||
-                  (turnstileRequired && !turnstileToken.trim())
+                  !company.trim()
                 }
                 className="flex-1 text-sm font-semibold py-2.5 rounded-lg flex items-center justify-center gap-2 disabled:opacity-50 disabled:pointer-events-none"
               >
