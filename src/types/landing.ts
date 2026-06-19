@@ -19,6 +19,16 @@ export interface HeroContent {
   subtitle: string
   primaryCta: { label: string; href: string }
   secondaryCta: { label: string; href: string }
+  dashboardMockupImage?: StrapiMedia | null
+  dashboardMockupAlt?: string
+}
+
+/** Imagen de Strapi (estructura v4/v5). */
+export interface StrapiMedia {
+  url: string
+  alternativeText?: string
+  width?: number
+  height?: number
 }
 
 export interface StatItem {
@@ -132,6 +142,13 @@ export interface SeoMeta {
   description?: string
 }
 
+export interface ResultPreviewContent {
+  title: string
+  description?: string
+  dashboardScreenshot?: StrapiMedia | null
+  dashboardScreenshotAlt?: string
+}
+
 export interface LandingPageData {
   seo: SeoMeta
   navbar: NavbarContent
@@ -142,4 +159,5 @@ export interface LandingPageData {
   benefits: BenefitsSectionContent
   contact: ContactSectionContent
   footer: FooterContent
+  resultPreview?: ResultPreviewContent
 }

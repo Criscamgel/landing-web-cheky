@@ -1,19 +1,18 @@
 import { Button } from '@/components/ui/Button'
-import { useSectionImage } from '@/hooks/useSectionImages'
 import type { HeroContent } from '@/types/landing'
+import { getStrapiUrl } from '@/lib/strapi'
 
 type Props = { content: HeroContent }
 
 export function HeroSection({ content }: Props) {
-  const cmsImage = useSectionImage(
-    '/api/hero-section',
-    'dashboardMockupImage',
-    'dashboardMockupAlt',
-    'Vista previa del dashboard de Cheky mostrando un resultado de check con score de confiabilidad',
-  )
-
-  const imageSrc = cmsImage?.url || '/hero-dashboard-mockup.png'
-  const imageAlt = cmsImage?.alt || 'Vista previa del dashboard de Cheky mostrando un resultado de check con score de confiabilidad'
+  const strapiBase = getStrapiUrl() || ''
+  const cmsImg = content.dashboardMockupImage
+  const imageSrc = cmsImg?.url
+    ? (cmsImg.url.startsWith('http') ? cmsImg.url : `${strapiBase}${cmsImg.url}`)
+    : '/hero-dashboard-mockup.png'
+  const imageAlt = content.dashboardMockupAlt
+    || cmsImg?.alternativeText
+    || 'Vista previa del dashboard de Cheky mostrando un resultado de check con score de confiabilidad'
   return (
     <section className="relative pt-28 pb-16 md:pt-[7.5rem] md:pb-20 px-5 bg-white overflow-hidden">
       {/* Background glow */}

@@ -1,19 +1,23 @@
-import { useSectionImage } from '@/hooks/useSectionImages'
+import type { ResultPreviewContent } from '@/types/landing'
+import { getStrapiUrl } from '@/lib/strapi'
+
+type Props = {
+  content?: ResultPreviewContent
+}
 
 /**
  * Sección visual informativa: muestra un preview del dashboard con resultado de check.
  * Sin botón de acción — solo comunica visualmente lo que el usuario obtiene.
  */
-export function ResultPreviewSection() {
-  const cmsImage = useSectionImage(
-    '/api/result-preview-section',
-    'dashboardScreenshot',
-    'dashboardScreenshotAlt',
-    'Vista del dashboard de Cheky con gráficas de análisis y resultado de un check',
-  )
-
-  const imageSrc = cmsImage?.url || '/result-preview-mockup.png'
-  const imageAlt = cmsImage?.alt || 'Vista del dashboard de Cheky con gráficas de análisis y resultado de un check'
+export function ResultPreviewSection({ content }: Props) {
+  const strapiBase = getStrapiUrl() || ''
+  const cmsImg = content?.dashboardScreenshot
+  const imageSrc = cmsImg?.url
+    ? (cmsImg.url.startsWith('http') ? cmsImg.url : `${strapiBase}${cmsImg.url}`)
+    : '/result-preview-mockup.png'
+  const imageAlt = content?.dashboardScreenshotAlt
+    || cmsImg?.alternativeText
+    || 'Vista del dashboard de Cheky con gráficas de análisis y resultado de un check'
   return (
     <section className="py-16 md:py-20 px-5 bg-white">
       <div className="max-w-6xl mx-auto">
