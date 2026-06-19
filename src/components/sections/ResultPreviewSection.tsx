@@ -1,8 +1,19 @@
+import { useSectionImage } from '@/hooks/useSectionImages'
+
 /**
  * Sección visual informativa: muestra un preview del dashboard con resultado de check.
  * Sin botón de acción — solo comunica visualmente lo que el usuario obtiene.
  */
 export function ResultPreviewSection() {
+  const cmsImage = useSectionImage(
+    '/api/result-preview-section',
+    'dashboardScreenshot',
+    'dashboardScreenshotAlt',
+    'Vista del dashboard de Cheky con gráficas de análisis y resultado de un check',
+  )
+
+  const imageSrc = cmsImage?.url || '/result-preview-mockup.png'
+  const imageAlt = cmsImage?.alt || 'Vista del dashboard de Cheky con gráficas de análisis y resultado de un check'
   return (
     <section className="py-16 md:py-20 px-5 bg-white">
       <div className="max-w-6xl mx-auto">
@@ -45,10 +56,10 @@ export function ResultPreviewSection() {
           {/* ─── Right: Dashboard Screenshot ─── */}
           <div className="relative flex items-center justify-center">
             <div className="relative w-full aspect-[16/10] rounded-2xl overflow-hidden shadow-[0_16px_48px_rgba(0,0,0,0.1)] border border-gray-100 bg-surface-50">
-              {/* Placeholder — reemplazar src con screenshot del dashboard */}
+              {/* Imagen del resultado — gestionada desde Strapi CMS */}
               <img
-                src="/result-preview-mockup.png"
-                alt="Vista del dashboard de Cheky con gráficas de análisis y resultado de un check"
+                src={imageSrc}
+                alt={imageAlt}
                 className="w-full h-full object-cover object-top"
                 loading="lazy"
                 onError={(e) => {
@@ -62,7 +73,7 @@ export function ResultPreviewSection() {
                       <div class="text-center px-6">
                         <p class="text-4xl mb-3">📈</p>
                         <p class="text-sm text-[#888] font-medium">Dashboard & Results Preview</p>
-                        <p class="text-xs text-[#aaa] mt-1">Sube result-preview-mockup.png a /public</p>
+                        <p class="text-xs text-[#aaa] mt-1">Sube la imagen desde Strapi CMS → Result Preview Section</p>
                       </div>
                     `
                     parent.appendChild(placeholder)

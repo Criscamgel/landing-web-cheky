@@ -1,9 +1,19 @@
 import { Button } from '@/components/ui/Button'
+import { useSectionImage } from '@/hooks/useSectionImages'
 import type { HeroContent } from '@/types/landing'
 
 type Props = { content: HeroContent }
 
 export function HeroSection({ content }: Props) {
+  const cmsImage = useSectionImage(
+    '/api/hero-section',
+    'dashboardMockupImage',
+    'dashboardMockupAlt',
+    'Vista previa del dashboard de Cheky mostrando un resultado de check con score de confiabilidad',
+  )
+
+  const imageSrc = cmsImage?.url || '/hero-dashboard-mockup.png'
+  const imageAlt = cmsImage?.alt || 'Vista previa del dashboard de Cheky mostrando un resultado de check con score de confiabilidad'
   return (
     <section className="relative pt-28 pb-16 md:pt-[7.5rem] md:pb-20 px-5 bg-white overflow-hidden">
       {/* Background glow */}
@@ -51,10 +61,10 @@ export function HeroSection({ content }: Props) {
           {/* ─── Right: Dashboard Mockup Image ─── */}
           <div className="relative flex items-center justify-center">
             <div className="relative w-full aspect-[4/3] rounded-2xl overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.12)] border border-gray-100 bg-surface-50">
-              {/* Placeholder — reemplazar src con screenshot del dashboard */}
+              {/* Imagen del hero — gestionada desde Strapi CMS */}
               <img
-                src="/hero-dashboard-mockup.png"
-                alt="Vista previa del dashboard de Cheky mostrando un resultado de check con score de confiabilidad"
+                src={imageSrc}
+                alt={imageAlt}
                 className="w-full h-full object-cover object-top"
                 loading="eager"
                 onError={(e) => {
@@ -69,7 +79,7 @@ export function HeroSection({ content }: Props) {
                       <div class="text-center px-6">
                         <p class="text-4xl mb-3">📊</p>
                         <p class="text-sm text-[#888] font-medium">Dashboard Preview</p>
-                        <p class="text-xs text-[#aaa] mt-1">Sube hero-dashboard-mockup.png a /public</p>
+                        <p class="text-xs text-[#aaa] mt-1">Sube la imagen desde Strapi CMS → Hero Section</p>
                       </div>
                     `
                     parent.appendChild(placeholder)
