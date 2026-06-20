@@ -164,12 +164,7 @@ export function AppointmentScheduler() {
     setStep('confirm')
   }
 
-  const handleDurationChange = (d: number) => {
-    setSelectedDuration(d)
-    setSelectedDate(null)
-    setSelectedSlot(null)
-    setStep('select-slot')
-  }
+
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -217,13 +212,7 @@ export function AppointmentScheduler() {
     )
   }
 
-  const allowedDurations = config?.allowedDurations ?? [15, 30, 45, 60]
-  const durationLabels: Record<number, string> = {
-    15: '15 min',
-    30: '30 min',
-    45: '45 min',
-    60: '1 hora',
-  }
+
 
   return (
     <div className="card-base grid grid-cols-1 lg:grid-cols-2 gap-0 rounded-2xl overflow-hidden">
