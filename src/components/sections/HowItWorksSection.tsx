@@ -6,11 +6,11 @@ type Props = { content: HowItWorksContent }
 export function HowItWorksSection({ content }: Props) {
   return (
     <section id="como-funciona" className="py-16 px-5 section-alt">
-      <div className="max-w-4xl mx-auto">
+      <div className="max-w-5xl mx-auto">
         <SectionHeading overline={content.overline} title={content.title} />
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5 relative">
-          <div className="hidden md:block absolute top-10 left-[20%] right-[20%] h-px bg-[#e0e0e0]" />
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-5 relative">
+          <div className="hidden md:block absolute top-10 left-[12%] right-[12%] h-px bg-[#e0e0e0]" />
 
           {content.steps.map((step) => (
             <div key={step.step} className="card-base rounded-xl p-6 text-center relative">
