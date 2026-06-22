@@ -6,11 +6,11 @@ type Props = {
   content?: ResultPreviewContent
 }
 
-const defaults = defaultLandingPage.resultPreview!
+const defaults = defaultLandingPage.resultado!
 
 /**
  * Sección visual informativa: preview del dashboard con resultado de check.
- * Contenido editable desde Strapi → landing-page → resultPreview.
+ * Contenido editable desde Strapi → landing-page → resultado.
  */
 export function ResultPreviewSection({ content }: Props) {
   const overline = content?.overline?.trim() || defaults.overline

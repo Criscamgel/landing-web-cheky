@@ -59,6 +59,9 @@ function buildDeepPopulate(): string {
   params.append('populate[contact][populate][highlights]', '*')
   params.append('populate[contact][populate][formFields]', '*')
   params.append('populate[footer][populate]', '*')
+  params.append('populate[resultado][populate][features]', '*')
+  params.append('populate[resultado][populate][dashboardScreenshot]', '*')
+  // Compat legacy field name until Strapi prod migrates
   params.append('populate[resultPreview][populate][features]', '*')
   params.append('populate[resultPreview][populate][dashboardScreenshot]', '*')
 
@@ -106,6 +109,11 @@ export async function fetchLandingFromStrapi(
  * - Normaliza `fieldId` → `id` en campos de contacto.
  */
 function normalizeStrapiFields(data: LandingPageData): LandingPageData {
+  const raw = data as unknown as Record<string, unknown>;
+  if (!data.resultado && raw.resultPreview) {
+    data.resultado = raw.resultPreview as LandingPageData['resultado'];
+  }
+
   if (data.pricing?.plans) {
     data.pricing.plans = data.pricing.plans.map((plan) => {
       if ('planId' in (plan as object) && !plan.id) {

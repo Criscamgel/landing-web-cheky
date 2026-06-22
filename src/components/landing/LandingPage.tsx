@@ -34,7 +34,7 @@ export function LandingPage({ data }: Props) {
         <HeroSection content={data.hero} />
         <StatsBar items={data.stats} />
         <HowItWorksSection content={data.howItWorks} />
-        <ResultPreviewSection content={data.resultPreview} />
+        <ResultPreviewSection content={data.resultado ?? data.resultPreview} />
         <BenefitsSection content={data.benefits} />
         <PricingSection content={data.pricing} />
         <ContactSection content={data.contact} />

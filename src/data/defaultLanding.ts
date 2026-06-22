@@ -125,7 +125,7 @@ export const defaultLandingPage: LandingPageData = {
       },
     ],
   },
-  resultPreview: {
+  resultado: {
     overline: 'Resultado',
     title: 'Un resultado simple para decisiones rápidas',
     description:

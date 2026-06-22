@@ -165,5 +165,7 @@ export interface LandingPageData {
   benefits: BenefitsSectionContent
   contact: ContactSectionContent
   footer: FooterContent
+  resultado?: ResultPreviewContent
+  /** @deprecated Strapi legacy field name — use `resultado` */
   resultPreview?: ResultPreviewContent
 }
