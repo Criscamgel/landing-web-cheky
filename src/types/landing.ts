@@ -142,9 +142,15 @@ export interface SeoMeta {
   description?: string
 }
 
+export interface ResultPreviewFeature {
+  text: string
+}
+
 export interface ResultPreviewContent {
+  overline?: string
   title: string
   description?: string
+  features?: ResultPreviewFeature[]
   dashboardScreenshot?: StrapiMedia | null
   dashboardScreenshotAlt?: string
 }

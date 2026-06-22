@@ -125,6 +125,19 @@ export const defaultLandingPage: LandingPageData = {
       },
     ],
   },
+  resultPreview: {
+    overline: 'Resultado',
+    title: 'Un resultado simple para decisiones rápidas',
+    description:
+      'En cuestión de segundos obtienes el score de confiabilidad del comprador, junto con un desglose claro de los factores que lo componen. Toda la información que necesitas para tomar decisiones informadas sin demoras.',
+    features: [
+      { text: 'Score de confiabilidad de 0 a 100 en tiempo real' },
+      { text: 'Desglose de factores: email, teléfono, redes, antigüedad' },
+      { text: 'Historial y métricas de tu empresa en un solo panel' },
+    ],
+    dashboardScreenshotAlt:
+      'Vista del dashboard de Cheky con gráficas de análisis y resultado de un check',
+  },
   benefits: {
     overline: 'Beneficios',
     title: 'Por qué elegir Cheky',

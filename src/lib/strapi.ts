@@ -59,7 +59,8 @@ function buildDeepPopulate(): string {
   params.append('populate[contact][populate][highlights]', '*')
   params.append('populate[contact][populate][formFields]', '*')
   params.append('populate[footer][populate]', '*')
-  params.append('populate[resultPreview][populate]', '*')
+  params.append('populate[resultPreview][populate][features]', '*')
+  params.append('populate[resultPreview][populate][dashboardScreenshot]', '*')
 
   return params.toString()
 }
