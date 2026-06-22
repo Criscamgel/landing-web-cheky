@@ -2,6 +2,9 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useAppointmentConfig, useAvailableSlots, useBookAppointment } from '@/hooks/useAppointments'
 import { Button } from '@/components/ui/Button'
 import { IconArrowRight } from '@/components/icons/UiIcons'
+import { TurnstileField } from '@/components/security/TurnstileField'
+import { isTurnstileConfigured } from '@/lib/turnstile.config'
+import { toast } from 'sonner'
 import type { BookAppointmentPayload } from '@/actions/appointments.action'
 
 // ─── Helpers ─────────────────────────────────────────────────
@@ -92,6 +95,8 @@ export function AppointmentScheduler() {
   const [email, setEmail] = useState('')
   const [company, setCompany] = useState('')
   const [phone, setPhone] = useState('')
+  const [turnstileToken, setTurnstileToken] = useState('')
+  const turnstileRequired = isTurnstileConfigured()
 
   const monthStr = getMonthStr(viewYear, viewMonth)
   const { data: slotsData, isLoading: slotsLoading } = useAvailableSlots(
@@ -184,6 +189,11 @@ export function AppointmentScheduler() {
     e.preventDefault()
     if (!selectedDate || !selectedSlot) return
 
+    if (turnstileRequired && !turnstileToken.trim()) {
+      toast.error('Completa la verificación de seguridad.')
+      return
+    }
+
     const payload: BookAppointmentPayload = {
       name: name.trim(),
       email: email.trim(),
@@ -192,10 +202,12 @@ export function AppointmentScheduler() {
       date: selectedDate,
       startTime: selectedSlot,
       duration: selectedDuration,
+      ...(turnstileToken.trim() ? { turnstileToken: turnstileToken.trim() } : {}),
     }
 
     book(payload, {
       onSuccess: () => setBooked(true),
+      onError: () => setTurnstileToken(''),
     })
   }
 
@@ -490,6 +502,11 @@ export function AppointmentScheduler() {
               />
             </div>
 
+            <TurnstileField
+              className="flex justify-center pt-1"
+              onToken={setTurnstileToken}
+            />
+
             <div className="flex gap-2 pt-2">
               <button
                 type="button"
@@ -505,7 +522,8 @@ export function AppointmentScheduler() {
                   booking ||
                   !name.trim() ||
                   !email.trim() ||
-                  !company.trim()
+                  !company.trim() ||
+                  (turnstileRequired && !turnstileToken.trim())
                 }
                 className="flex-1 text-sm font-semibold py-2.5 rounded-lg flex items-center justify-center gap-2 disabled:opacity-50 disabled:pointer-events-none"
               >
