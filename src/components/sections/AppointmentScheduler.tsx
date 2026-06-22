@@ -6,6 +6,20 @@ import type { BookAppointmentPayload } from '@/actions/appointments.action'
 
 // ─── Helpers ─────────────────────────────────────────────────
 
+/** Horario comercial Colombia — debe coincidir con backend */
+const APPOINTMENT_START = '09:00'
+const APPOINTMENT_END = '18:00'
+
+function timeToMinutes(time: string): number {
+  const [h, m] = time.split(':').map(Number)
+  return h * 60 + (m || 0)
+}
+
+function isSlotWithinBusinessHours(slot: string): boolean {
+  const minutes = timeToMinutes(slot)
+  return minutes >= timeToMinutes(APPOINTMENT_START) && minutes < timeToMinutes(APPOINTMENT_END)
+}
+
 const DAYS_ES = ['LUN', 'MAR', 'MIÉ', 'JUE', 'VIE', 'SÁB', 'DOM']
 const MONTHS_ES = [
   'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
@@ -101,7 +115,7 @@ export function AppointmentScheduler() {
   const slotsForSelectedDate = useMemo(() => {
     if (!selectedDate || !slotsData?.days) return []
     const day = slotsData.days.find((d) => d.date === selectedDate)
-    return day?.slots ?? []
+    return (day?.slots ?? []).filter(isSlotWithinBusinessHours)
   }, [selectedDate, slotsData])
 
   const calendarDays = useMemo(
