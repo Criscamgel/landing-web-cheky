@@ -1,15 +1,12 @@
 import { Button } from '@/components/ui/Button'
 import type { HeroContent } from '@/types/landing'
-import { getStrapiUrl } from '@/lib/strapi'
+import { resolveStrapiMediaUrl } from '@/lib/strapi'
 
 type Props = { content: HeroContent }
 
 export function HeroSection({ content }: Props) {
-  const strapiBase = getStrapiUrl() || ''
   const cmsImg = content.dashboardMockupImage
-  const imageSrc = cmsImg?.url
-    ? (cmsImg.url.startsWith('http') ? cmsImg.url : `${strapiBase}${cmsImg.url}`)
-    : '/hero-dashboard-mockup.png'
+  const imageSrc = resolveStrapiMediaUrl(cmsImg) ?? '/hero-dashboard-mockup.png'
   const imageAlt = content.dashboardMockupAlt
     || cmsImg?.alternativeText
     || 'Vista previa del dashboard de Cheky mostrando un resultado de check con score de confiabilidad'

@@ -1,6 +1,6 @@
 import { defaultLandingPage } from '@/data/defaultLanding'
 import { getEnv } from '@/lib/runtimeEnv'
-import type { LandingPageData } from '@/types/landing'
+import type { LandingPageData, StrapiMedia } from '@/types/landing'
 
 function isLandingPageData(value: unknown): value is LandingPageData {
   if (!value || typeof value !== 'object') return false
@@ -40,6 +40,14 @@ export function getStrapiUrl(): string | undefined {
   return url ? url.replace(/\/$/, '') : undefined
 }
 
+/** URL absoluta de un asset del CMS (relativo `/uploads/...` o ya absoluto). */
+export function resolveStrapiMediaUrl(media?: StrapiMedia | null): string | undefined {
+  if (!media?.url) return undefined
+  if (media.url.startsWith('http')) return media.url
+  const base = getStrapiUrl()
+  return base ? `${base}${media.url}` : media.url
+}
+
 /**
  * Construye los query params de populate profundo para el Single Type landing-page.
  * Strapi 5 con `populate=*` solo baja 1 nivel; componentes anidados requieren populate explícito.
@@ -51,7 +59,7 @@ function buildDeepPopulate(): string {
   const topLevel = ['seo', 'stats', 'pricing']
   topLevel.forEach((field) => params.append(`populate[${field}]`, '*'))
 
-  // Nivel 2 (componentes con sub-componentes)
+  // Nivel 2 (componentes con sub-componentes / media)
   params.append('populate[navbar][populate]', '*')
   params.append('populate[hero][populate]', '*')
   params.append('populate[howItWorks][populate]', '*')
@@ -59,11 +67,8 @@ function buildDeepPopulate(): string {
   params.append('populate[contact][populate][highlights]', '*')
   params.append('populate[contact][populate][formFields]', '*')
   params.append('populate[footer][populate]', '*')
-  params.append('populate[resultado][populate][features]', '*')
-  params.append('populate[resultado][populate][dashboardScreenshot]', '*')
-  // Compat legacy field name until Strapi prod migrates
-  params.append('populate[resultPreview][populate][features]', '*')
-  params.append('populate[resultPreview][populate][dashboardScreenshot]', '*')
+  // resultado: features + dashboardScreenshot (media). `populate[media]=*` devuelve 400 en Strapi 5.
+  params.append('populate[resultado][populate]', '*')
 
   return params.toString()
 }
@@ -102,16 +107,63 @@ export async function fetchLandingFromStrapi(
   return normalizeStrapiFields(parsed)
 }
 
+function normalizeStrapiMedia(raw: unknown): StrapiMedia | null | undefined {
+  if (raw == null) return null
+  if (typeof raw !== 'object') return undefined
+
+  const record = raw as Record<string, unknown>
+
+  if (typeof record.url === 'string') {
+    return {
+      url: record.url,
+      alternativeText:
+        typeof record.alternativeText === 'string' ? record.alternativeText : undefined,
+      width: typeof record.width === 'number' ? record.width : undefined,
+      height: typeof record.height === 'number' ? record.height : undefined,
+    }
+  }
+
+  const nested = record.data as Record<string, unknown> | undefined
+  const attrs = nested?.attributes as Record<string, unknown> | undefined
+  if (attrs && typeof attrs.url === 'string') {
+    return {
+      url: attrs.url,
+      alternativeText:
+        typeof attrs.alternativeText === 'string' ? attrs.alternativeText : undefined,
+      width: typeof attrs.width === 'number' ? attrs.width : undefined,
+      height: typeof attrs.height === 'number' ? attrs.height : undefined,
+    }
+  }
+
+  return undefined
+}
+
 /**
  * Normaliza campos de Strapi que difieren del modelo del frontend.
  * - Strapi usa `planId` (porque `id` es reservado) → el frontend espera `id`.
  * - Strapi usa `formFields` (porque `fields` es reservado) → el frontend espera `fields`.
  * - Normaliza `fieldId` → `id` en campos de contacto.
+ * - `resultPreview` → `resultado` (legacy).
+ * - Media plana o anidada (v4/v5).
  */
 function normalizeStrapiFields(data: LandingPageData): LandingPageData {
-  const raw = data as unknown as Record<string, unknown>;
+  const raw = data as unknown as Record<string, unknown>
   if (!data.resultado && raw.resultPreview) {
-    data.resultado = raw.resultPreview as LandingPageData['resultado'];
+    data.resultado = raw.resultPreview as LandingPageData['resultado']
+  }
+
+  if (data.resultado) {
+    const screenshot = normalizeStrapiMedia(data.resultado.dashboardScreenshot)
+    if (screenshot !== undefined) {
+      data.resultado = { ...data.resultado, dashboardScreenshot: screenshot }
+    }
+  }
+
+  if (data.hero) {
+    const mockup = normalizeStrapiMedia(data.hero.dashboardMockupImage)
+    if (mockup !== undefined) {
+      data.hero = { ...data.hero, dashboardMockupImage: mockup }
+    }
   }
 
   if (data.pricing?.plans) {
@@ -126,8 +178,8 @@ function normalizeStrapiFields(data: LandingPageData): LandingPageData {
   // Strapi usa `formFields` porque `fields` es palabra reservada
   const contact = data.contact
   if (contact && 'formFields' in (contact as object) && !contact.fields) {
-    const raw = contact as unknown as { formFields: typeof contact.fields }
-    contact.fields = raw.formFields
+    const contactRaw = contact as unknown as { formFields: typeof contact.fields }
+    contact.fields = contactRaw.formFields
   }
 
   if (data.contact?.fields) {

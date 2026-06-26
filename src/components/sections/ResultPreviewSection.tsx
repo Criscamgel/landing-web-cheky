@@ -1,6 +1,6 @@
 import type { ResultPreviewContent } from '@/types/landing'
 import { defaultLandingPage } from '@/data/defaultLanding'
-import { getStrapiUrl } from '@/lib/strapi'
+import { resolveStrapiMediaUrl } from '@/lib/strapi'
 
 type Props = {
   content?: ResultPreviewContent
@@ -21,13 +21,8 @@ export function ResultPreviewSection({ content }: Props) {
       ? content.features.filter((f) => f.text?.trim())
       : defaults.features ?? []
 
-  const strapiBase = getStrapiUrl() || ''
   const cmsImg = content?.dashboardScreenshot
-  const imageSrc = cmsImg?.url
-    ? cmsImg.url.startsWith('http')
-      ? cmsImg.url
-      : `${strapiBase}${cmsImg.url}`
-    : '/result-preview-mockup.png'
+  const imageSrc = resolveStrapiMediaUrl(cmsImg) ?? '/result-preview-mockup.png'
   const imageAlt =
     content?.dashboardScreenshotAlt?.trim() ||
     cmsImg?.alternativeText ||
