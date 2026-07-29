@@ -41,8 +41,6 @@ Pasarela de Pago: Los pagos se realizan a través de la pasarela autorizada Bold
 
 Planes: Contamos con opciones Starter, Basic, Growth, Pro y Enterprise. No hay contratos de permanencia obligatoria; puedes dejar de renovar según lo acordado en cada plan.
 
-Prueba Gratuita: Ofrecemos 5 consultas de regalo iniciales para demostrar el valor del servicio sin costo.
-
 5. Disponibilidad y Soporte Técnico
 
 Tiempo de Respuesta: Nos esforzamos por entregar el score en un tiempo menor a 15 segundos.
