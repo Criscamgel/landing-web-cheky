@@ -137,9 +137,18 @@ export interface FooterContent {
   socials: SocialLink[]
 }
 
+export type SeoRobots = 'index, follow' | 'noindex, nofollow'
+export type SeoTwitterCard = 'summary' | 'summary_large_image'
+
 export interface SeoMeta {
   title: string
   description?: string
+  canonicalUrl?: string
+  robots?: SeoRobots
+  ogTitle?: string
+  ogDescription?: string
+  ogImage?: StrapiMedia | null
+  twitterCard?: SeoTwitterCard
 }
 
 export interface ResultPreviewFeature {

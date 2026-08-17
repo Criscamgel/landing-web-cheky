@@ -56,8 +56,9 @@ function buildDeepPopulate(): string {
   const params = new URLSearchParams()
 
   // Nivel 1 (componentes directos sin sub-componentes)
-  const topLevel = ['seo', 'stats', 'pricing']
+  const topLevel = ['stats', 'pricing']
   topLevel.forEach((field) => params.append(`populate[${field}]`, '*'))
+  params.append('populate[seo][populate]', 'ogImage')
 
   // Nivel 2 (componentes con sub-componentes / media)
   params.append('populate[navbar][populate]', '*')

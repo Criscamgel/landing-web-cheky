@@ -3,9 +3,15 @@ import type { LandingPageData } from '@/types/landing'
 /** Contenido por defecto (mismo copy que `template.html`). Strapi puede reemplazarlo por API. */
 export const defaultLandingPage: LandingPageData = {
   seo: {
-    title: 'Cheky — Huella Digital & Confiabilidad',
+    title: 'Cheky | Verificación de identidad y scoring crediticio en Colombia',
     description:
-      'Verifica el Patrón de comportamiento digital de cualquier comprador. Score de confiabilidad en tiempo real.',
+      'Verifica identidad y confiabilidad de compradores con huella digital y scoring crediticio. Plataforma B2B para empresas en Colombia.',
+    canonicalUrl: 'https://cheky.co',
+    robots: 'index, follow',
+    ogTitle: 'Cheky — Verificación de identidad y prevención de fraude',
+    ogDescription:
+      'Score de confiabilidad en tiempo real para empresas. Verifica el patrón digital de cualquier comprador antes de cerrar una venta.',
+    twitterCard: 'summary_large_image',
   },
   navbar: {
     brandName: 'Cheky',

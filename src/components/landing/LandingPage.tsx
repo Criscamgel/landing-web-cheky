@@ -1,5 +1,5 @@
-import { useEffect } from 'react'
 import { Footer } from '@/components/layout/Footer'
+import { SeoHead } from '@/components/seo/SeoHead'
 import { Navbar } from '@/components/layout/Navbar'
 import { BenefitsSection } from '@/components/sections/BenefitsSection'
 import { ContactSection } from '@/components/sections/ContactSection'
@@ -13,22 +13,9 @@ import type { LandingPageData } from '@/types/landing'
 type Props = { data: LandingPageData }
 
 export function LandingPage({ data }: Props) {
-  useEffect(() => {
-    document.title = data.seo.title
-    const meta = document.querySelector('meta[name="description"]')
-    if (data.seo.description) {
-      if (meta) meta.setAttribute('content', data.seo.description)
-      else {
-        const m = document.createElement('meta')
-        m.name = 'description'
-        m.content = data.seo.description
-        document.head.appendChild(m)
-      }
-    }
-  }, [data.seo])
-
   return (
     <>
+      <SeoHead seo={data.seo} />
       <Navbar content={data.navbar} />
       <main className="overflow-x-hidden">
         <HeroSection content={data.hero} />
